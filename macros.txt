@@ -1,0 +1,12 @@
+SO_NUM_USERS:5
+SO_NUM_NODES:6       
+SO_MIN_TRANS_GEN_NSEC:7       
+SO_MAX_TRANS_GEN_NSEC:8        
+SO_MIN_TRANS_PROC_NSEC:9        
+SO_MAX_TRANS_PROC_NSEC:10       
+SO_BUDGET_INIT:11           
+SO_REWARD:12            
+SO_RETRY:13           
+SO_TP_SIZE:14            
+SO_NUM_FRIENDS:15           
+SO_SIM_SEC:16 
