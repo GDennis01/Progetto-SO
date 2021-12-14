@@ -40,7 +40,7 @@ int main(int argc, char const *argv[])
     int  i,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
     read_macros(fd,macros);/*I read macros from file*/
-    close(fd);/*I close the fd used to read macros*/
+    close(fd);/*I close the fd used to read macross*/
 
     for(i=0;i<N_USERS;i++){
         switch(fork()){
