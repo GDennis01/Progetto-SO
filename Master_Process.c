@@ -20,7 +20,7 @@
 -Ogni processo user/nodo farà l'attach alla shmemory e leggerà il contenuto (vedere come leggere la roba dalla shared memory). Una volta finita la lettura si effettuerà il deattach
 -Il processo master alla fine farà il deattach finale così da garantire la rimozione della shared memory
 (L'ho scritto come promemoria per non dimenticarmelo)*/
-#define MSGQ_KEY "12345"
+#define MSGQ_KEY "1234"
 #define TEST_ERROR if (errno) {fprintf(stderr,				\
 				       "%s:%d: PID=%5d: Error %d (%s)\n", \
 				       __FILE__,			\
@@ -53,24 +53,31 @@ int main(int argc, char const *argv[])
     int key;
     char *prova;
     char *msgq_key[]={MSGQ_KEY,NULL};
-    struct msg_buf buf;
+    struct msg_buf *buf;
     struct msqid_ds data;
     
 
     read_macros(fd,macros);/*I read macros from file*/
     close(fd);/*I close the fd used to read macross*/
+    key=shmget(atoi(MSGQ_KEY),sizeof(buf->mtext),IPC_CREAT| 0660);
+    printf("ID della SHM:%d\n",key);
+    buf=shmat(key,NULL,0);
 
-    buf.type=1;
-    buf.mtext=malloc(sizeof(int)*12);
-    buf.mtext=macros;
+    buf->type=1;
+    for(z=0;z<N_MACRO;z++){
+        buf->mtext[z]=macros[z];
+    }
+    
 
-    key=msgget(atoi(MSGQ_KEY),IPC_CREAT | 0660);
-    printf("L'id della coda di messaggi è:%d\n",key);
-    err=msgsnd(key,&buf,sizeof(int)*12,0);
+   
+    /*key=msgget(atoi(MSGQ_KEY),IPC_CREAT | 0660);
+    printf("Padre - L'id della coda di messaggi è:%d\n",key);
+    err=msgsnd(key,&buf,sizeof(buf.mtext),0);*/
+    printf("Dimensione testo struttura:%ld\n",sizeof(buf->mtext));
     TEST_ERROR
 
     for(z=0;z<N_MACRO;z++){
-        printf("Macro %d°:%d\n",z+1,buf.mtext[z]);
+        printf("Macro %d°:%d\n",z+1,buf->mtext[z]);
     }
     for(i=0;i<N_USERS;i++){
         switch(fork()){
@@ -103,8 +110,9 @@ int main(int argc, char const *argv[])
             break;
         }
     }
+    /*msgctl(key,IPC_RMID,&data);*/
 
-
+    /*shmctl(key,IPC_RMID,NULL)*/
     return 0;
 }
 /*Function used to read macros from "macros.txt". They are then saved in macros*/

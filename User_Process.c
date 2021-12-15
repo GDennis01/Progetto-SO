@@ -24,24 +24,22 @@
 int main(int argc, char const *argv[])
 {
     int id,key,nbyte,i;
-    int *macross=malloc(12*sizeof(int));/*12 is the number of macros defined in macros.txt*/
-    struct msg_buf buf;
+    struct msg_buf *buf;
     
-    printf("La MSGQ_KEY E':%s\n",argv[0]);/*arv[0] is the msg_q key*/
     key=atoi(argv[0]);
-    id=msgget(key,IPC_CREAT | 0600);
+    /*id=msgget(key,IPC_CREAT | 0600);*/
     TEST_ERROR
-    printf("L'id della coda di messaggi è :%d\n",id);
-    nbyte=msgrcv(id,&buf,sizeof(int)*12,1,MSG_COPY | IPC_NOWAIT );
-    if(nbyte == 0){
-        printf("Errore bro");
-    }else{
-        printf("Letti %d nbyte\n",nbyte);
-        TEST_ERROR
-    }
+  
+     id=shmget(key,sizeof(buf->mtext),IPC_CREAT);
+    buf=shmat(id,NULL,SHM_RDONLY);
+      printf("ID della SHM:%d\n",id);
+    TEST_ERROR
+    
         for(i=0;i<12;i++){
-            /*printf("Macro %d°:%d\n",i,buf.macros[i]);*/
+            printf("Macro %d°:%d\n",i+1,buf->mtext[i]);
         }
+        shmdt(buf);
+        
     
 
     return 0;
