@@ -1,34 +1,11 @@
 #define _GNU_SOURCE  /* Per poter compilare con -std=c89 -pedantic */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-#include <sys/shm.h>
-#include <sys/msg.h>
-
-#include "Master_Process.h"
-
+#include "common.c"
 /*-Creare una shared memory(vedi shmget) nel processo master con una chiave definita nel file macro.txt
 -Fare execve dei processi user e nodo passando come argomento la chiave della shared memory
 -Ogni processo user/nodo farà l'attach alla shmemory e leggerà il contenuto (vedere come leggere la roba dalla shared memory). Una volta finita la lettura si effettuerà il deattach
 -Il processo master alla fine farà il deattach finale così da garantire la rimozione della shared memory
 (L'ho scritto come promemoria per non dimenticarmelo)*/
-#define MSGQ_KEY "1234"
-#define TEST_ERROR if (errno) {fprintf(stderr,				\
-				       "%s:%d: PID=%5d: Error %d (%s)\n", \
-				       __FILE__,			\
-				       __LINE__,			\
-				       getpid(),			\
-				       errno,				\
-				       strerror(errno));}
-
+#define SHM_KEY "1234"
 #define N_MACRO 12 /*Numbers of macros to read from "macros.txt"*/
 /*Macros*/
 #define N_USERS macros[0]
@@ -51,41 +28,35 @@ int main(int argc, char const *argv[])
     int  i,z,err,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
     int key;
-    char *prova;
-    char *msgq_key[]={MSGQ_KEY,NULL};
-    struct msg_buf *buf;
-    struct msqid_ds data;
-    
+    char *shm_key[]={SHM_KEY,NULL};
+    struct shm_buf *buf;
 
+    
     read_macros(fd,macros);/*I read macros from file*/
     close(fd);/*I close the fd used to read macross*/
-    key=shmget(atoi(MSGQ_KEY),sizeof(buf->mtext),IPC_CREAT| 0660);
+
+    key=shmget(atoi(SHM_KEY),sizeof(buf->mtext),IPC_CREAT| 0660);
     printf("ID della SHM:%d\n",key);
     buf=shmat(key,NULL,0);
 
-    buf->type=1;
+    /*Writing Macros to shared memory*/
     for(z=0;z<N_MACRO;z++){
         buf->mtext[z]=macros[z];
     }
     
-
-   
-    /*key=msgget(atoi(MSGQ_KEY),IPC_CREAT | 0660);
-    printf("Padre - L'id della coda di messaggi è:%d\n",key);
-    err=msgsnd(key,&buf,sizeof(buf.mtext),0);*/
     printf("Dimensione testo struttura:%ld\n",sizeof(buf->mtext));
     TEST_ERROR
-
+/*
     for(z=0;z<N_MACRO;z++){
         printf("Macro %d°:%d\n",z+1,buf->mtext[z]);
-    }
+    }*/
     for(i=0;i<N_USERS;i++){
         switch(fork()){
             /*Child code*/
             case 0:
             /*execveing  user processes*/
-            /*execve("User",MSGQ_KEY,NULL);*/
-            err=execve("User",msgq_key,NULL);
+            /*execve("User",shm_key,NULL);*/
+            err=execve("User",shm_key,NULL);
             if(err==-1)
                 TEST_ERROR
             break;
@@ -110,28 +81,9 @@ int main(int argc, char const *argv[])
             break;
         }
     }
-    /*msgctl(key,IPC_RMID,&data);*/
-
     /*shmctl(key,IPC_RMID,NULL)*/
     return 0;
 }
-/*Function used to read macros from "macros.txt". They are then saved in macros*/
 /*TODO: FIXARE LA ROBA DEGLI SPAZI IN MACROS.TXT*/
-void read_macros(int fd,int * macros){
-    int j=0,i,tmp;
-    char c;
-    char *string=malloc(6);/*Macros' parametere cant have more than 5/6 digits*/
-    while(read(fd,&c,1) != 0){
-        if(c == ':'){ 
-            read(fd,&c,1);
-            for( i=0;c>=48 && c<=57;i++){
-                *(string+i)=c;
-                read(fd,&c,1);
-            }
-             tmp = atoi(string);
-            macros[j]=tmp;
-            j++;
-        }
-    }
-}
+
 
