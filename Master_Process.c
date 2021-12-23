@@ -5,7 +5,7 @@
 -Ogni processo user/nodo farà l'attach alla shmemory e leggerà il contenuto (vedere come leggere la roba dalla shared memory). Una volta finita la lettura si effettuerà il deattach
 -Il processo master alla fine farà il deattach finale così da garantire la rimozione della shared memory
 (L'ho scritto come promemoria per non dimenticarmelo)*/
-#define SHM_KEY "12345"
+#define SHM_KEY "123456"
 #define SEM_KEY "11"
 
 int main(int argc, char const *argv[])
@@ -14,39 +14,35 @@ int main(int argc, char const *argv[])
     int macros[N_MACRO];
     char str[15];/*Stringified key for shm*/
     int key,key2;/*key:key for shared memory key2:key for semaphores*/
-    char *shm_key[]={"User",NULL,NULL};/*First arg of argv should be the filename by default*/
+    char *arguments[]={"User",NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
-    
 
     read_macros(fd,macros);/*I read macros from file*/
     close(fd);/*I close the fd used to read macross*/
 
     key=shmget(atoi(SHM_KEY),sizeof(macros)+sizeof(child)*(N_USERS+N_NODES),IPC_CREAT| 0660);
+    TEST_ERROR
     printf("PADRE -> ID della SHM:%d\n",key);
-    sprintf(str,"%d",key);
-    shm_key[1]=str;
+    sprintf(str,"%d",key);/*I convert the key from int to string*/
+    arguments[1]=str;
 
     shm_buf=(child*)shmat(key,NULL,0);
 
 
-    /*printf("Indirizzo buff->children[0]:%p\n",buf->children);*/
 
     /*Writing Macros to shared memory*/
     for(z=0;z<N_MACRO;z++){
         shm_buf[z].pid=macros[z];
     }
-   
+    
     key2=semget(atoi(SEM_KEY),1,IPC_CREAT |0600);
     
     semctl(key2,0,SETVAL,N_USERS);
     TEST_ERROR
 
-    printf("Dimensione testo struttura:%ld\n",sizeof(shm_buf));
-    TEST_ERROR
-
-    for(z=0;z<N_MACRO;z++){
+    /*for(z=0;z<N_MACRO;z++){
         printf("Macro %d°:%d\n",z+1,shm_buf[z].pid);
-    }
+    }*/
     printf("FINE STAMPA PADRE\n");
     for(i=0;i<N_USERS;i++){
         switch(child_pid=fork()){
@@ -57,13 +53,13 @@ int main(int argc, char const *argv[])
                 sops.sem_flg=0;
 
                 semop(key2,&sops,1);/*wait for 0 operation*/
-                execve("User",shm_key,NULL);
+                execve("User",arguments,NULL);
                 TEST_ERROR
             break;
 
             /*Parent code*/
             default:
-
+                /*N_MACRO is the offset*/
                 shm_buf[N_MACRO+i].pid=child_pid;
                 shm_buf[N_MACRO+i].status=1;
 

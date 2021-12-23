@@ -12,6 +12,7 @@
 #include <sys/sem.h>
 #include <sys/shm.h>
 #include <sys/msg.h>
+#include <math.h>
 #define TEST_ERROR if (errno) {fprintf(stderr,				\
 				       "%s:%d: PID=%5d: Error %d (%s)\n", \
 				       __FILE__,			\
@@ -46,8 +47,8 @@ typedef struct transaction{
 	time_t timestamp;
 	pid_t sender;
 	pid_t receiver;
-	unsigned int amount;
-	unsigned int reward;
+	 int amount;
+	 int reward;
 } transaction;
 
 typedef struct child {
@@ -57,4 +58,4 @@ typedef struct child {
 
 /*Function used to read macros from "macros.txt". They are then saved in macros*/
 void read_macros(int fd,int * macros);
-struct transaction creaTransazione(pid_t rec, unsigned int budget);
+struct transaction creaTransazione( unsigned int budget,int n_users,int percentage_reward);
