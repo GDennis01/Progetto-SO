@@ -36,11 +36,7 @@
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
 
-/*typedef struct shm_buf{ size of shared memory : 12*4 + sizeof(child)(N_USER+N_NODE) 
-        int macros[12];
-		struct child * children; children[0]=user array   children[1]=node array
-} shm_buf;*/
-
+/*Struct used to send/read data from shared memory*/
 struct child *shm_buf;
 
 typedef struct transaction{
@@ -51,11 +47,13 @@ typedef struct transaction{
 	 int reward;
 } transaction;
 
+/*Struct used to define a child(either a user or a node). Used also to store macros*/
 typedef struct child {
 	pid_t pid;
 	unsigned int status; /* 0 se morto, 1 se vivo*/
 } child;
 
-/*Function used to read macros from "macros.txt". They are then saved in macros*/
+/*Function used to read macros from "macros.txt". They are then saved in the then defined variable macros*/
 void read_macros(int fd,int * macros);
-struct transaction creaTransazione( unsigned int budget,int n_users,int percentage_reward);
+/*Function used to create a new transaction*/
+struct transaction creaTransazione( unsigned int budget);

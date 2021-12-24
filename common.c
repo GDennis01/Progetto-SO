@@ -14,13 +14,10 @@ void read_macros(int fd,int * macros){
                 read(fd,&c,1);
             }
             tmp = atoi(string);
-            printf("%d°:%d\n",j+1,tmp);
             bzero(string,10);/*Erasing the temporary string since it may cause data inconsistency*/
             macros[j]=tmp;
             j++;
         }
     }
-    for(i=0;i<sizeof(macros);i++){
-        printf("MACRO:%d\n",macros[i]);
-    }
+    
 }
