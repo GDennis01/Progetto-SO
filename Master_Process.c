@@ -39,7 +39,7 @@ int main(int argc, char const *argv[])
     shm_buf=(child*)shmat(key,NULL,0);
 	mastro_buf = (transaction*)shmat(keyLibroMastro, NULL, 0);
 	
-	/* apertura msqueues dove users ficcano transazioni e i nodes le raccolgono */
+	/* apertura msgqueues dove users ficcano transazioni e i nodes le raccolgono */
 	keyMsg = msgget( MSGQUEUE_KEY, IPC_CREAT|0660 );
 	sprintf(str,"%d",keyMsg);/*I convert the key from int to string*/
     	userArgs[3]=str;	/* ? */

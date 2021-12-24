@@ -16,6 +16,7 @@ int main(int argc, char const *argv[])
     child *pid_users;
     transaction tr;
     int budget;
+    message messaggio;
     
     id=atoi(argv[1]);/*shared memory id to access shared memory with macros*/
     msgId = atoi(argv[3]);
@@ -43,8 +44,8 @@ int main(int argc, char const *argv[])
     TEST_ERROR
 	
 	/* ficca la transazione nella message queue */
-	creaMessaggio(tr);
-	msgsnd ( msgId , *message , sizeof(transaction), 0 ) /* la size non include il type */
+	messaggio = creaMessaggio(tr);
+	msgsnd ( msgId , messagio , sizeof(transaction), 0 ) /* la size non include il type */
 	
     shmdt(shm_buf);
     return 0;
@@ -82,7 +83,7 @@ struct transaction creaTransazione(unsigned int budget,int n_users,int percentag
     	
 }
 
-struct messaggio creaMessaggio(struct transazione tr){
+struct messagge creaMessaggio(struct transazione tr){
 	messagge msg;
 	msg.type = 1; /*a caso */
 	msg.transaction = tr;
