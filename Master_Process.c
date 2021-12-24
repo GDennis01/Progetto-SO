@@ -16,8 +16,8 @@ int main(int argc, char const *argv[])
     int macros[N_MACRO];
     char str[15];/*Stringified key for shm*/
     int key,key2,keyLibroMastro,keyMsg;/*key:key for shared memory key2:key for semaphores*/
-    char *userArgs[]={"User",NULL,NULL};/*First arg of argv should be the filename by default*/
-    char *nodeArgs[]={"Node",NULL,NULL};
+    char *userArgs[]={"User",NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
+    char *nodeArgs[]={"Node",NULL,NULL,NULL};
     struct sembuf sops;
 
     read_macros(fd,macros);/*I read macros from file*/
@@ -41,6 +41,9 @@ int main(int argc, char const *argv[])
 	
 	/* apertura msqueues dove users ficcano transazioni e i nodes le raccolgono */
 	keyMsg = msgget( MSGQUEUE_KEY, IPC_CREAT|0660 );
+	sprintf(str,"%d",keyMsg);/*I convert the key from int to string*/
+    	userArgs[3]=str;	/* ? */
+    	nodeArgs[3]=str;	/* ? */
 
 
     /*Writing Macros to shared memory*/
@@ -124,6 +127,7 @@ int main(int argc, char const *argv[])
     /*finita la creazione dei nodi sia users che nodes sono liberi di iniziare ad agire secondo il loro codice
     /*shmctl(key,IPC_RMID,NULL)*/
     while(wait(NULL) != -1);/*Waiting for all children to DIE*/
+    msgctl(keyMsg, IPC_RMID , NULL ) ; /*RIMOZIONE MESSAGE QUEUE */
     return 0;
 }
 /*TODO: FIXARE LA ROBA DEGLI SPAZI IN MACROS.TXT*/

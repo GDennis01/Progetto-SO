@@ -12,12 +12,13 @@
 int macros[N_MACRO];
 int main(int argc, char const *argv[])
 {
-    int id,key,i;
+    int id,msgId,key,i;
     child *pid_users;
     transaction tr;
     int budget;
     
     id=atoi(argv[1]);/*shared memory id to access shared memory with macros*/
+    msgId = atoi(argv[3]);
     shm_buf=(child*)shmat(id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
 
     printf("ID della SHM:%d\n",id);
@@ -42,6 +43,9 @@ int main(int argc, char const *argv[])
     TEST_ERROR
 	
 	/* ficca la transazione nella message queue */
+	creaMessaggio(tr);
+	msgsnd ( msgId , *message , sizeof(transaction), 0 ) /* la size non include il type */
+	
     shmdt(shm_buf);
     return 0;
 }
@@ -75,7 +79,13 @@ struct transaction creaTransazione(unsigned int budget,int n_users,int percentag
     tr.reward=(int)((double)percentage_reward/100*tmp_budget);/* percentage/100 * budget ie: 12% -> 12/100 * 500*/
     return tr;
     }
-    
-	
+    	
+}
+
+struct messaggio creaMessaggio(struct transazione tr){
+	messagge msg;
+	msg.type = 1; /*a caso */
+	msg.transaction = tr;
+	return msg;
 }
 
