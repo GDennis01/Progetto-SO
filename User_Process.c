@@ -40,7 +40,8 @@ int main(int argc, char const *argv[])
     tr=creaTransazione(budget,N_USERS,SO_REWARD);
     printf("Struct transazione:\n\tTimestamp:%ld\n\tReceiver:%d\n\tSender:%d\n\tAmount:%d\n\tReward:%d\n",tr.timestamp,tr.receiver,tr.sender,tr.amount,tr.reward);
     TEST_ERROR
-
+	
+	/* ficca la transazione nella message queue */
     shmdt(shm_buf);
     return 0;
 }
@@ -63,12 +64,12 @@ struct transaction creaTransazione(unsigned int budget,int n_users,int percentag
 
     do{
     user=rand()%n_users;/*range [0,N_USERS-1]*/
-    }while(shm_buf[12+user].pid == getpid());/*This way I force sender not to send the transaction to itself*/
+    }while(shm_buf[N_MACRO+user].pid == getpid());/*This way I force sender not to send the transaction to itself*/
     
 
 	tr.timestamp = curr_time.tv_nsec;/*current clock_time*/
 	tr.sender = getpid();/*PID of the process creating the transaction*/
-	tr.receiver = shm_buf[12+user].pid;/*choosing a random user in the range [0,N_USERS-1]. 12 is the offset(and number of macro) in the shm buffer*/
+	tr.receiver = shm_buf[N_MACRO+user].pid;/*choosing a random user in the range [0,N_USERS-1]. 12 is the offset(and number of macro) in the shm buffer*/
 	tr.amount = tmp_budget - tr.reward;/*amount to be sent is equal to: tr.amount-(so_reward*amount)*/
     /*commission for node process*/
     tr.reward=(int)((double)percentage_reward/100*tmp_budget);/* percentage/100 * budget ie: 12% -> 12/100 * 500*/

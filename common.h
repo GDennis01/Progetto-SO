@@ -42,6 +42,7 @@
 } shm_buf;*/
 
 struct child *shm_buf;
+struct transaction *mastro_buf;
 
 typedef struct transaction{
 	time_t timestamp;
@@ -55,6 +56,11 @@ typedef struct child {
 	pid_t pid;
 	unsigned int status; /* 0 se morto, 1 se vivo*/
 } child;
+
+typedef struct messaggio {
+	long mtype ; /* type of message, lo scegliamo arbitrariamente e serve er un eventuale selezione di quali messaggi leggere da parte dei nodes */
+	transaction tr;/* my personal message goes here */
+} messaggio;
 
 /*Function used to read macros from "macros.txt". They are then saved in macros*/
 void read_macros(int fd,int * macros);
