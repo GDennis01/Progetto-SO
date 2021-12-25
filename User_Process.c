@@ -22,7 +22,7 @@ int main(int argc, char const *argv[])
     id=atoi(argv[1]);/*shared memory id to access shared memory with macros*/
     shm_buf=(child*)shmat(id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
 
-    printf("[CHILD #%d] ID della SHM:%d\n",getpid(),id);
+    printf("[USER CHILD #%d] ID della SHM:%d\n",getpid(),id);
     /*Storing macros in a local variable. That way I can use macros defined in common.h*/
     for(i=0;i<N_MACRO;i++){
         macros[i]=shm_buf[i].pid;
@@ -40,6 +40,8 @@ int main(int argc, char const *argv[])
     TEST_ERROR
 
     shmdt(shm_buf);
+    printf("[USER CHILD] ABOUT TO ABORT\n");
+
     return 0;
 }
 
