@@ -10,3 +10,7 @@
 #include <fcntl.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include "common.c"
+void printTransaction(struct transaction tr);
+struct transaction creaTransazione(unsigned int budget);
+int getRndNode();

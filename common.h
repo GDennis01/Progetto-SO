@@ -13,6 +13,7 @@
 #include <sys/shm.h>
 #include <sys/msg.h>
 #include <math.h>
+#include <signal.h>
 #define TEST_ERROR if (errno) {fprintf(stderr,				\
 				       "%s:%d: PID=%5d: Error %d (%s)\n", \
 				       __FILE__,			\
@@ -35,6 +36,8 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
+#define SO_BLOCK_SIZE 20
+#define SO_REGISTRY_SIZE 11
 
 /*Struct used to send/read data from shared memory*/
 struct child *shm_buf;
@@ -47,6 +50,11 @@ typedef struct transaction{
 	 int reward;
 } transaction;
 
+typedef struct msgqbuf{
+	long mtype;
+	transaction tr;
+}msgqbuf;
+
 /*Struct used to define a child(either a user or a node). Used also to store macros*/
 typedef struct child {
 	pid_t pid;
@@ -56,4 +64,6 @@ typedef struct child {
 /*Function used to read macros from "macros.txt". They are then saved in the then defined variable macros*/
 void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
-struct transaction creaTransazione( unsigned int budget);
+void initIPCS(int*shm_key,int*sem_key,int *msgq_key,int dim);
+void deleteIPCs(int shm_key,int sem_key,int msgq_key);
+void handlerINT(int sig);

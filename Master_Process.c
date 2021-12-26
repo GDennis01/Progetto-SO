@@ -29,40 +29,53 @@ P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction
 int main(int argc, char const *argv[])
 {
     int  i,z,err,child_pid,fd = open("macros.txt",O_RDONLY);
-    int macros[N_MACRO];
-    char str[15];/*Stringified key for shm*/
-    int key,key2;/*key:key for shared memory key2:key for semaphores*/
-    char *arguments[]={NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
+    int macros[N_MACRO],dim;
+    char str[15],str2[15];/*Stringified key for shm*/
+    int shm_key,sem_key,msgq_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
+    char *arguments[]={NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
 
     read_macros(fd,macros);/*I read macros from file*/
     close(fd);/*I close the fd used to read macross*/
 
-    /*Getting the key for the shared memory(and also initializing it)*/
-    key=shmget(atoi(SHM_KEY),sizeof(macros)+sizeof(child)*(N_USERS+N_NODES)+1,IPC_CREAT| 0660);
-    if(key==-1){
+    dim=sizeof(macros)+sizeof(child)*(N_USERS+N_NODES)+1;
+
+    initIPCS(&shm_key,&sem_key,&msgq_key,dim);
+    if(shm_key==-1){
         TEST_ERROR
         exit(1);
     }
-    TEST_ERROR
-    printf("[PARENT #%d] ID della SHM:%d\n",getpid(),key);
-    sprintf(str,"%d",key);/*I convert the key from int to string*/
-    arguments[1]=str;
+    if(sem_key==-1){
+        TEST_ERROR
+        exit(1);
+    }
+    if(msgq_key==-1){
+        TEST_ERROR
+        exit(1);
+    }
 
-    /*Attaching the shm_buf variable to shared memory*/
-    shm_buf=(child*)shmat(key,NULL,0);
-    /*
-    Writing Macros to shared memory.
+
+    TEST_ERROR
+    printf("[PARENT #%d] ID della SHM:%d\n",getpid(),shm_key);
+    printf("[PARENT #%d] ID del SEM:%d\n",getpid(),sem_key);
+    sprintf(str,"%d",shm_key);/*I convert the key from int to string*/
+    arguments[1]=str;
+    
+    sprintf(str2,"%d",msgq_key);/*I convert the key from int to string*/
+    arguments[2]=str2;/*Had to create another temporary string(str2) due to strange behaviour with sprintf*/
+
+    shm_buf=(child*)shmat(shm_key,NULL,0);/*Attaching the shm_buf variable to shared memory*/
+    
+    /*Writing Macros to shared memory.
     The first 12 locations of the arrays are reserved for the macros,others will be used
-    to store pids and statuses of user/node processes
-    */
+    to store pids and statuses of user/node processes*/
+    
     for(z=0;z<N_MACRO;z++){
         shm_buf[z].pid=macros[z];
     }
-    /*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
-    key2=semget(atoi(SEM_KEY),1,IPC_CREAT |0600);
-    semctl(key2,0,SETVAL,N_USERS);
-    
+    /*Generating user children*/
+    semctl(sem_key,0,SETVAL,N_USERS);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
+   
     for(i=0;i<N_USERS;i++){
         switch(child_pid=fork()){
             /*To avoid inconsistency reading from user processes, I stop said processes at a semaphore till the father is done writing PIDs in the shm array*/
@@ -71,7 +84,7 @@ int main(int argc, char const *argv[])
                 sops.sem_op=0;
                 sops.sem_flg=0;
 
-                semop(key2,&sops,1);/*wait for 0 operation*/
+                semop(sem_key,&sops,1);/*wait for 0 operation*/
                 arguments[0]="User";
                 execve("User",arguments,NULL);
                 exit(1);
@@ -86,24 +99,21 @@ int main(int argc, char const *argv[])
                 sops.sem_num=0;
                 sops.sem_op=-1;
                 sops.sem_flg=0;
-                semop(key2,&sops,1);/*decreasing the value by 1*/
-
-                
-                TEST_ERROR
-            /*handling stuff*/
+                semop(sem_key,&sops,1);/*decreasing the value by 1*/
             break;
         }
     }
-    semctl(key2,0,SETVAL,N_NODES);
+
+    /*Generating children node processes*/
+    semctl(sem_key,0,SETVAL,N_NODES);
     for(i=0;i<N_NODES;i++){
         switch(child_pid=fork()){
             /*Child code*/
             case 0:
-            
             sops.sem_num=0;
             sops.sem_op=0;
             sops.sem_flg=0;
-            semop(key2,&sops,1);/*wait for 0 operation*/
+            semop(sem_key,&sops,1);/*wait for 0 operation*/
             
             arguments[0]="Node";
             execve("Node",arguments,NULL);
@@ -116,22 +126,24 @@ int main(int argc, char const *argv[])
             shm_buf[N_MACRO+N_USERS+i].pid=child_pid;
             shm_buf[N_MACRO+N_USERS+i].status=1;
 
-            printf("[PARENT #%d] NODE CHILD appena creato ha pid %d\n",getpid(),shm_buf[N_MACRO+N_USERS+i].pid);
+            /*printf("[PARENT #%d] NODE CHILD appena creato ha pid %d\n",getpid(),shm_buf[N_MACRO+N_USERS+i].pid);*/
             
             sops.sem_num=0;
             sops.sem_op=-1;
             sops.sem_flg=0;
-            semop(key2,&sops,1);/*decreasing the value by 1*/
-            TEST_ERROR
+            semop(sem_key,&sops,1);/*decreasing the value by 1*/
             break;
         }
     }
     
     while(wait(NULL) != -1);/*Waiting for all children to DIE*/
     printf("[PARENT] AFTER WAIT\n");
-    shmctl(key,IPC_RMID,NULL);/*Detachment of shared memory*/
-    semctl(key2,0,IPC_RMID,NULL);/*Deleting semaphore*/
+   /* shmctl(shm_key,IPC_RMID,NULL);/*Detachment of shared memory
+    semctl(sem_key,0,IPC_RMID,NULL);/*Deleting semaphore
+    msgctl(msgq_key,IPC_RMID,NULL);*/
+    deleteIPCs(shm_key,sem_key,msgq_key);
     printf("[PARENT] ABOUT TO ABORT\n");
+    
     return 0;
 }
 
