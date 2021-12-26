@@ -66,4 +66,3 @@ void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int*shm_key,int*sem_key,int *msgq_key,int dim);
 void deleteIPCs(int shm_key,int sem_key,int msgq_key);
-void handlerINT(int sig);
