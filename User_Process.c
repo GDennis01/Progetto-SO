@@ -1,6 +1,6 @@
 #include "User_Process.h"
-#include <math.h>
-#define _GNU_SOURCE  /* Needed to compile with -std=c89 -pedantic flags*/
+
+ /* Needed to compile with -std=c89 -pedantic flags*/
 #define TEST_ERROR if (errno) {fprintf(stderr,				\
 				       "%s:%d: PID=%5d: Error %d (%s)\n", \
 				       __FILE__,			\
@@ -14,6 +14,7 @@ child *pid_users;
 child *pid_nodes;
 int main(int argc, char const *argv[])
 {
+    struct sigaction sa;
     int shm_id,msgq_id,sem_id,i,j,budget;
     pid_t pid;
     transaction tr;

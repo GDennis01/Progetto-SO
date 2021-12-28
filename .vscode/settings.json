@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "types.h": "c",
-        "fcntl.h": "c"
+        "fcntl.h": "c",
+        "signal.h": "c",
+        "common.h": "c",
+        "user_process.h": "c",
+        "stdlib.h": "c"
     }
 }

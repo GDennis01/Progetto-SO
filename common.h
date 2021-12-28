@@ -1,3 +1,4 @@
+#define _GNU_SOURCE 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,8 +48,8 @@ typedef struct transaction{
 	time_t timestamp;
 	pid_t sender;
 	pid_t receiver;
-	 int amount;
-	 int reward;
+	int amount;
+	int reward;
 } transaction;
 
 /*Struct used to store info related to children processes(users and nodes)*/
@@ -78,3 +79,5 @@ void read_macros(int fd,int * macros);
 void initIPCS(int*shm_key,int*sem_key,int *msgq_key,int dim);
 void deleteIPCs(int shm_key,int sem_key,int msgq_key);
 void updateInfos(int budget,int abort_trans,info_process*infos);
+void terminazione(info_process *infos,int reason,int dim);
+void alarmHandler(int sig);
