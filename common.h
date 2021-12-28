@@ -42,6 +42,7 @@
 /*Struct used to send/read data from shared memory*/
 struct child *shm_buf;
 
+/*Struct used to define a transaction*/
 typedef struct transaction{
 	time_t timestamp;
 	pid_t sender;
@@ -50,6 +51,16 @@ typedef struct transaction{
 	 int reward;
 } transaction;
 
+/*Struct used to store info related to children processes(users and nodes)*/
+typedef struct info_process{
+	int budget;
+	pid_t pid;
+	/*TODO: flexata di collassare il tipo in abort_trans. 24 bit significativi per abort, i restanti per il tibo*/
+	short int type;/*0 for Users    1 for Nodes*/
+	int abort_trans;/*if type 0, users aborted(1) prematurely, if 1, # of transaction* in trans pool*/
+}info_process;
+
+/*Buffer used to send/receive transactions by users and node*/
 typedef struct msgqbuf{
 	long mtype;
 	transaction tr;
@@ -66,3 +77,4 @@ void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int*shm_key,int*sem_key,int *msgq_key,int dim);
 void deleteIPCs(int shm_key,int sem_key,int msgq_key);
+void updateInfos(int budget,int abort_trans,info_process*infos);

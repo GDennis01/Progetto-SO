@@ -26,14 +26,16 @@ P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction
 #define SHM_KEY "123456"
 #define SEM_KEY "11"
 
+/*Global variable indicating whether the master should stop its execution or not*/
 int main(int argc, char const *argv[])
 {
-    int  i,z,err,child_pid,fd = open("macros.txt",O_RDONLY);
+    int  i,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO],dim;
-    char str[15],str2[15];/*Stringified key for shm*/
+    char str[15],str2[15],str3[15];/*Stringified key for shm*/
     int shm_key,sem_key,msgq_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
-    char *arguments[]={NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
+    char *arguments[]={NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
+
 
     read_macros(fd,macros);/*I read macros from file*/
     close(fd);/*I close the fd used to read macross*/
@@ -58,21 +60,28 @@ int main(int argc, char const *argv[])
     TEST_ERROR
     printf("[PARENT #%d] ID della SHM:%d\n",getpid(),shm_key);
     printf("[PARENT #%d] ID del SEM:%d\n",getpid(),sem_key);
+    
     sprintf(str,"%d",shm_key);/*I convert the key from int to string*/
     arguments[1]=str;
+
+    sprintf(str3,"%d",sem_key);/*I convert the key from int to string*/
+    arguments[3]=str3;
     
     sprintf(str2,"%d",msgq_key);/*I convert the key from int to string*/
     arguments[2]=str2;/*Had to create another temporary string(str2) due to strange behaviour with sprintf*/
-
+    
     shm_buf=(child*)shmat(shm_key,NULL,0);/*Attaching the shm_buf variable to shared memory*/
     
     /*Writing Macros to shared memory.
     The first 12 locations of the arrays are reserved for the macros,others will be used
     to store pids and statuses of user/node processes*/
     
-    for(z=0;z<N_MACRO;z++){
-        shm_buf[z].pid=macros[z];
+    for(i=0;i<N_MACRO;i++){
+        shm_buf[i].pid=macros[i];
     }
+
+    alarm(SO_SIM_SEC);
+    semctl(sem_key,1,SETVAL,N_NODES);
     /*Generating user children*/
     semctl(sem_key,0,SETVAL,N_USERS);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
    
@@ -135,8 +144,10 @@ int main(int argc, char const *argv[])
             break;
         }
     }
+    while(wait(&status) != -1);/*Waiting for all children to DIE*/
+        
+        
     
-    while(wait(NULL) != -1);/*Waiting for all children to DIE*/
     printf("[PARENT] AFTER WAIT\n");
    /* shmctl(shm_key,IPC_RMID,NULL);/*Detachment of shared memory
     semctl(sem_key,0,IPC_RMID,NULL);/*Deleting semaphore
