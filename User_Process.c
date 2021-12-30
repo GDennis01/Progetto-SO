@@ -1,3 +1,8 @@
+/*
+    Ultime modifiche
+        -30/12/2021
+            -Aggiunta "tr.executed=1" alla fine di creazione di una transazione
+*/
 #include "User_Process.h"
 
  /* Needed to compile with -std=c89 -pedantic flags*/
@@ -115,6 +120,7 @@ int main(int argc, char const *argv[])
 	tr.amount = tmp_budget - tr.reward;/*amount to be sent is equal to: tr.amount-(so_reward*amount)*/
     /*commission for node process*/
     tr.reward=(int)((double)SO_REWARD/100*tmp_budget);/* percentage/100 * budget ie: 12% of 500 -> 12/100 * 500*/
+    tr.executed=1;
     return tr;
     }
 }

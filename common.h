@@ -1,3 +1,12 @@
+/*
+	Ultime modifiche:
+	-30/12/2021
+		-Aggiunta del campo "executed" alla struct transaction
+		-Aggiunta della struct "transaction_block"
+		-Aggiunta della variabile legata al libro mastro
+		-Aggiunta del prototipo della funzione "creaTransazione"
+*/
+
 #define _GNU_SOURCE 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,14 +52,24 @@
 /*Struct used to send/read data from shared memory*/
 struct child *shm_buf;
 
+/*Variable used to communicate with shared memory and to log info on the ledger(Libro mastro)*/
+ transaction_block *mastro_area_memoria;
+
 /*Struct used to define a transaction*/
 typedef struct transaction{
+	unsigned int executed;/*whether the transaction has been processed(1) or not(0)*/
 	time_t timestamp;
 	pid_t sender;
 	pid_t receiver;
 	int amount;
 	int reward;
 } transaction;
+
+/*Struct used to define a single transaction block to be then processed*/
+typedef struct transaction_block{
+	unsigned int executed;
+	transaction transactions[SO_BLOCK_SIZE];
+} transaction_block;
 
 /*Struct used to store info related to children processes(users and nodes)*/
 typedef struct info_process{
@@ -81,3 +100,4 @@ void deleteIPCs(int shm_key,int sem_key,int msgq_key);
 void updateInfos(int budget,int abort_trans,info_process*infos);
 void terminazione(info_process *infos,int reason,int dim);
 void alarmHandler(int sig);
+struct transaction creaTransazione(unsigned int budget);

@@ -1,3 +1,9 @@
+/*
+	Ultime modifiche:
+	-30/12/2021
+		-Aggiunta del metodo "creaTransazione"
+        -Aggiunta del metodo "scritturaMastro"
+*/
 #include "common.c"
 
 int macros[N_MACRO];
@@ -60,8 +66,45 @@ child *pid_nodes;
     return 0;
 }
 
+/*
+    Method that updates the info of the current node
+*/
 void updateInfos(int budget,int abort_trans,info_process* infos){
     infos->budget=budget;
     infos->abort_trans=abort_trans;
 }
+/*
+    Creation of the reward transaction
+*/
+struct transaction creaTransazione(unsigned int budget){
+    transaction tr;
+    struct timespec curr_time;
+    clock_gettime(CLOCK_REALTIME,&curr_time);
+    srand(curr_time.tv_nsec);
+    tr.timestamp = curr_time.tv_nsec;/*current clock_time*/
+	tr.sender = -1;/*MACRO DA DEFINIRE*/
+	tr.receiver = getpid();
+	tr.amount = budget;
+    /*commission for node process*/
+    tr.reward=0;
+    tr.executed = 1 ;
+    return tr;
+}
+
+/*
+    Controlla se il libro mastro è pieno
+    Se è pieno allora manda un segnale al padre dicendo di terminare tutto
+    (una delle condizione di terminazione è appunto il libro mastro pieno)
+    se non è pieno, scrive il blocco nel libro mastro.
+*/
+int scritturaMastro(){
+    int i=0;
+    while(mastro_area_memoria[i].eseguito == 1){
+        if(i>SO_REGISTRY_SIZE-1)
+            kill( getppid() , SIGUSR1 ); //SEGNALE CHE DICE AL PADRE DI TERMINARE TUTTO
+        i++;
+    }
+
+
+
 
