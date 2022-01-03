@@ -104,7 +104,7 @@ int main(int argc, char const *argv[])
     semctl(sem_key,1,SETVAL,N_NODES);
     /*Generating user children*/
     semctl(sem_key,0,SETVAL,N_USERS);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
-   
+    semctl(sem_key,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
     alarm(SO_SIM_SEC);
 
     for(i=0;i<N_USERS;i++){
@@ -195,12 +195,19 @@ void terminazione(info_process * shm_info,int reason,int dim){
          
     }
     printf("Numero di Processi Utenti terminati prematuramente:%d\n",cnt);
+
+    printf("Stampa libro mastro:\n");
+    for(i=0;i<SO_REGISTRY_SIZE;i++){
+        printf("Mastro[%d]:%d",i+1,mastro_area_memoria[i].executed);
+    }
 }
 
 
 void signalsHandler(int signal) {
     switch(signal){
     case SIGALRM:
+        terminazione(shm_info,0,dims);
+        break;
     case SIGUSR1: /*Libro mastro is full*/
         terminazione(shm_info,1,dims);
         break;

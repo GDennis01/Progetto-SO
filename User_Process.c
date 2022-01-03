@@ -5,6 +5,8 @@
         -Le macro vora engono salvate in *shm_macro, le info dei processi in *info
         -alarmHandler -> signalsHandler
         -Aggiunto mastro_key/id e la sua relativa shared memory
+        -Implementato il ciclo(while(1))
+        
 
     -30/12/2021
         -Aggiunta "tr.executed=1" alla fine di creazione di una transazione
@@ -23,6 +25,10 @@
 int macros[N_MACRO];
 info_process *pid_users;/*Variable used to store pid of users locally*/
 info_process *pid_nodes;/*Variable used to store pid of nodes locally*/
+
+int getBudget(info_process* infos,int my_index){
+    return infos[my_index].budget;
+}
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
@@ -35,13 +41,16 @@ int main(int argc, char const *argv[])
     */
     int info_id,macro_id,sem_id,mastro_id,msgq_id;
     int i,j,budget;
+    int my_index;
     pid_t pid;
     transaction tr;/*transction to be sent*/
     transaction * tr_block,*tr_pool;
     msgqbuf msg_buf;/*Buffer used to send transaction*/
     struct sembuf sops;/*variable used to perform actions on semaphores*/
     info_process infos;/*variable used to store data of the current process locally*/
+    struct timespec time;
 
+    srand(getpid());
     /*Initializing infos that will be sent every second to the master process*/
     infos.pid=getpid();
     infos.type=0;
@@ -80,6 +89,9 @@ int main(int argc, char const *argv[])
     for(i=0;i<N_USERS;i++){
         pid_users[i].pid=shm_info[i].pid;  
         pid_users[i].type=0;
+        if(shm_info[i].pid==getpid()){
+            my_index=i;
+        }
         /*printf("[USER CHILD #%d] Leggo User #%d \n",getpid(),pid_users[i].pid);  */
     }
 
@@ -93,20 +105,24 @@ int main(int argc, char const *argv[])
 
     
     
-    /*Creating a new transaction*/
-    tr = creaTransazione(budget);
-    /*printTransaction(tr);*/
-    /*Sending the transaction to a random selected node.*/
-    pid=getRndNode();
-    msg_buf.mtype=pid_nodes[pid].pid;/*That way, only the selected node can read the message with type set to its pid*/
-    msg_buf.tr=tr;
+    while(1){
+        time.tv_nsec=(rand()+MIN_TRANS_GEN_NSEC)%MAX_TRANS_GEN_NSEC+1;
+        time.tv_sec=0;
+        /*Creating a new transaction*/
+        tr = creaTransazione(budget);
+        /*printTransaction(tr);*/
+        /*Sending the transaction to a random selected node.*/
+        pid=getRndNode();
+        msg_buf.mtype=pid_nodes[pid].pid;/*That way, only the selected node can read the message with type set to its pid*/
+        msg_buf.tr=tr;
 
-    msgq_id=msgget(pid_nodes[pid].pid,0660);
-    TEST_ERROR
-    msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0);
+        msgq_id=msgget(pid_nodes[pid].pid,0660);
+        TEST_ERROR
+        msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0);
+        printf("[USER CHILD #%d] INVIO A MSGQ_ID: %d  -> NODO SELEZIONATO:%d\n",getpid(),msgq_id,pid_nodes[pid].pid);
+        nanosleep(&time,NULL);
+    }
 
-    printf("[USER CHILD #%d] INVIO A MSGQ_ID: %d  -> NODO SELEZIONATO:%d\n",getpid(),msgq_id,pid_nodes[pid].pid);
-    
     shmdt(shm_buf);
     printf("[USER CHILD #%d] ABOUT TO ABORT\n",getpid());
 
@@ -131,7 +147,6 @@ int main(int argc, char const *argv[])
     int user;
     
     clock_gettime(CLOCK_REALTIME,&curr_time);
-    srand(curr_time.tv_nsec);/*initializing RNG seed with the current clocktime(?)*/
     tmp_budget=rand()%(budget+1) +2;/*rSelecting random budget in range [2,budget]. Cannot send more money than current budget*/
     
     do{
@@ -160,11 +175,11 @@ int getRndNode(){
 	return rand()%N_NODES;
 }
 
-void updateInfos(int budget,int abort_trans,info_process* infos){
-    infos->pid=getpid();
-    infos->type=0;
-    infos->budget=budget;
-    infos->abort_trans=abort_trans;
+void updateInfos(int budget,int abort_trans,info_process* infos,int my_index){
+    infos[my_index].pid=getpid();
+    infos[my_index].type=0;
+    infos[my_index].budget=infos->budget+budget;
+    infos[my_index].abort_trans=abort_trans;
 }
 /*TODO: fixare handle_signal(errori sintattici etc)*/
 void signalsHandler(int signal) {

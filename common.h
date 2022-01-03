@@ -46,7 +46,7 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
-#define SO_BLOCK_SIZE 20
+#define SO_BLOCK_SIZE 5
 #define SO_REGISTRY_SIZE 11
 
 /*Struct used to send/read data from shared memory*/
@@ -108,7 +108,7 @@ void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims);
 void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
-void updateInfos(int budget,int abort_trans,info_process*infos);
+void updateInfos(int budget,int abort_trans,info_process*infos,int index);
 void terminazione(info_process *infos,int reason,int dim);
 void signalsHandler(int sig);
 struct transaction creaTransazione(unsigned int budget);

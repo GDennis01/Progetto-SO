@@ -6,6 +6,8 @@
         -Ora ci sono solo tre key: info,macro e sem
         -Le macro ora vengono salvate in *shm_macro, le info dei processi in *info
         -Impostata la dimensione massima della coda di messaggi(transazione*TP_SIZE)
+        -Implementato il ciclo(while(1))
+        -Implementata la scrittura sul libro mastro
         
 	-30/12/2021
 		-Aggiunta del metodo "creaTransazione"
@@ -16,17 +18,23 @@
 int macros[N_MACRO];
 info_process *pid_users;
 info_process *pid_nodes;
+ struct sembuf sops;
  int main(int argc, char const *argv[])
 {
     int info_id,macro_id,msgq_id,sem_id,mastro_id,i,j;
     int budget;
+    int my_index=0;
+    int sum_reward=0;
     int bytes_read;
     transaction tr;
+    transaction_block block;
     struct msqid_ds msg_ds;
     msgqbuf msg_buf;
     info_process infos;
-    struct sembuf sops;
+   
+    struct timespec time;
 
+  
     /*Initializing infos that will be sent every second to the master process*/
     infos.pid=getpid();
     infos.type=1;
@@ -82,11 +90,42 @@ info_process *pid_nodes;
     for(i=0;i<N_NODES;i++){
         pid_nodes[i].pid=shm_info[i+N_USERS].pid;  
         pid_users[i].type=1;
+        if(shm_info[i].pid==getpid()){
+            my_index=i;
+        }
         /*printf("[USER CHILD #%d] Leggo Nodo #%d \n",getpid(),pid_nodes[i].pid); */   
+    }
+    i=0;
+    time.tv_sec=0;
+    time.tv_nsec=(rand()+MIN_TRANS_PROC_NSEC)%MAX_TRANS_PROC_NSEC;
+    while(1){
+        
+    if(i==SO_BLOCK_SIZE-1){/*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/
+        printf("AHA##################@@@@@@@\n");
+        printf("My budget:%d\n",shm_info[my_index].budget);
+        block.transactions[i]=creaTransazione(sum_reward);/*Saving the reward transaction in the last spot of the block*/
+        block.executed=1;
+        scritturaMastro(sem_id,block);
+        nanosleep(&time,NULL);/*Simulating the elaboring process*/
+        updateInfos(sum_reward,0,shm_info,my_index);
+        
+
+        /*Resetting the variables for the next cycles*/
+        i=0;
+        sum_reward=0;
+        time.tv_sec=0;
+        time.tv_nsec=(rand()+MIN_TRANS_PROC_NSEC)%MAX_TRANS_PROC_NSEC;
     }
 
     bytes_read=msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
+
+    if(bytes_read >= 32){/*It reads only 32 bytes/transaction*/
+        sum_reward=sum_reward+msg_buf.tr.reward;
+        block.transactions[i]=msg_buf.tr;/*Saving the transaction just read in the block to-be-executed*/
+        i++;
+    }
     printf("[NODE CHILD #%d] LETTI %d BYTES\n",getpid(),bytes_read);
+    }
 
     shmdt(&shm_buf);
     msgctl(msgq_id,IPC_RMID,NULL);
@@ -98,9 +137,9 @@ info_process *pid_nodes;
 /*
     Method that updates the info of the current node
 */
-void updateInfos(int budget,int abort_trans,info_process* infos){
-    infos->budget=budget;
-    infos->abort_trans=abort_trans;
+void updateInfos(int budget,int abort_trans,info_process* infos,int index){
+    infos[index].budget=infos[index].budget+budget;
+    infos[index].abort_trans=abort_trans;
 }
 /*
     Creation of the reward transaction
@@ -126,16 +165,28 @@ struct transaction creaTransazione(unsigned int budget){
     (una delle condizione di terminazione è appunto il libro mastro pieno)
     se non è pieno, scrive il blocco nel libro mastro.
 */
-int scritturaMastro(){
+int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
     int i=0;
-    while(mastro_area_memoria[i].executed == 1){
-        if(i>SO_REGISTRY_SIZE-1)
-            kill( getppid() , SIGUSR1 );
+    while(mastro_area_memoria[i].executed != 1 && i<SO_REGISTRY_SIZE){  /* l'indice "i" alla fine del ciclo avrà il valore dell'ultimo posto libero*/
         i++;
     }
-    /*
-        Scrittura del blocco nel libro_mastro[i] (l'indici "i" alla fine del ciclo avrà il valore dell'ultimo posto libero)
-    */
+    if(i>SO_REGISTRY_SIZE-1){ /*se posto libero è oltre i confini del mastro, vuol dire che quest'ultimo è pieno */
+        kill( getppid() , SIGUSR1 );
+        printf("STO PER AMMAZZARE IL PADRE AHAHAHAH\n");
+        return 0;
+    }else{
+        sops.sem_num=2;
+        sops.sem_op=-1;
+        sops.sem_flg=0;
+        semop(semaforo_id,&sops,1); /*seize the resource, now it can write on the mastro*/
+        
+        mastro_area_memoria[i] = nuovoBlocco;
+
+        /* restituzione del semaforo*/
+        sops.sem_op=1;
+        semop(semaforo_id,&sops,1); /*gives back the resource, now other nodes can write on the mastro*/
+        return 1;
+    }
 }
 
 
