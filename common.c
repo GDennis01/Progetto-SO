@@ -22,15 +22,17 @@ void read_macros(int fd,int * macros){
 }
 
 /*Method to initialize IPCs objects*/
-void initIPCS(int *info_key,int *macro_key,int *sem_key,int dims){
+void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims){
     *info_key=shmget(IPC_PRIVATE,dims,IPC_CREAT| 0660);/*Getting the key for the shared memory(and also initializing it)*/
     *macro_key=shmget(IPC_PRIVATE,N_MACRO*sizeof(int),IPC_CREAT | 0660);
     *sem_key=semget(IPC_PRIVATE,2,IPC_CREAT | 0660);
+    *mastro_key = shmget(IPC_PRIVATE,SO_REGISTRY_SIZE*SO_BLOCK_SIZE*sizeof(transaction),IPC_CREAT| 0660);
 }
 
-void deleteIPCs(int info_key,int macro_key,int sem_key){
+void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key){
     shmctl(info_key,IPC_RMID,NULL);/*Detachment of shared memory*/
     shmctl(macro_key,IPC_RMID,NULL);/*Detachment of shared memory*/
     semctl(sem_key,0,IPC_RMID,NULL);/*Deleting semaphore*/
+    shmdt(mastro_area_memoria);
     /*msgctl(msgq_key,IPC_RMID,NULL);*/
 }

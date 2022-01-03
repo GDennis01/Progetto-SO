@@ -51,13 +51,10 @@ int main(int argc, char const *argv[])
 
     dims=sizeof(info_process)*(N_USERS+N_NODES);
 
-    mastro_key = shmget(IPC_PRIVATE,SO_REGISTRY_SIZE*SO_BLOCK_SIZE*sizeof(transaction),IPC_CREAT| 0660); 
-    
-    mastro_area_memoria = (transaction_block*)shmat(mastro_key, NULL, 0); 
-
-    initIPCS(&info_key,&macro_key,&sem_key,dims);
+    initIPCS(&info_key,&macro_key,&sem_key,&mastro_key, dims);
     shm_info=shmat(info_key,NULL,0660);
     shm_macro=shmat(macro_key,NULL,0660);
+    mastro_area_memoria = (transaction*)shmat(mastro_key, NULL, 0);  /*così leggi a blocchi di transazione*/
 
 
     if(info_key==-1){
@@ -69,6 +66,10 @@ int main(int argc, char const *argv[])
         exit(1);
     }
     if(sem_key==-1){
+        TEST_ERROR
+        exit(1);
+    }
+    if(mastro_key==-1){
         TEST_ERROR
         exit(1);
     }
@@ -172,8 +173,7 @@ int main(int argc, char const *argv[])
         
     
     printf("[PARENT] AFTER WAIT\n");
-    deleteIPCs(info_key,macro_key,sem_key);
-    shmdt(mastro_area_memoria);
+    deleteIPCs(info_key,macro_key,sem_key,mastro_key);
     printf("[PARENT] ABOUT TO ABORT\n");
     
     return 0;

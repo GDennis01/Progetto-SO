@@ -106,8 +106,8 @@ typedef struct child {
 /*Function used to read macros from "macros.txt". They are then saved in the then defined variable macros*/
 void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
-void initIPCS(int *info_key,int *macro_key,int *sem_key,int dims);
-void deleteIPCs(int info_key,int macro_key,int sem_key);
+void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims);
+void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
 void updateInfos(int budget,int abort_trans,info_process*infos);
 void terminazione(info_process *infos,int reason,int dim);
 void signalsHandler(int sig);
