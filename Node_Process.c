@@ -1,5 +1,12 @@
 /*
+    TODO: Mettere una dimensione subito dopo aver fatto la msgget
+
 	Ultime modifiche:
+    -03/01/2021
+        -Ora ci sono solo tre key: info,macro e sem
+        -Le macro ora vengono salvate in *shm_macro, le info dei processi in *info
+        -Impostata la dimensione massima della coda di messaggi(transazione*TP_SIZE)
+        
 	-30/12/2021
 		-Aggiunta del metodo "creaTransazione"
         -Aggiunta del metodo "scritturaMastro"
@@ -7,14 +14,15 @@
 #include "common.c"
 
 int macros[N_MACRO];
-child *pid_users;
-child *pid_nodes;
+info_process *pid_users;
+info_process *pid_nodes;
  int main(int argc, char const *argv[])
 {
-    int shm_id,msgq_key,sem_id,i,j;
+    int info_id,macro_id,msgq_id,sem_id,mastro_id,i,j;
     int budget;
     int bytes_read;
     transaction tr;
+    struct msqid_ds msg_ds;
     msgqbuf msg_buf;
     info_process infos;
     struct sembuf sops;
@@ -25,43 +33,62 @@ child *pid_nodes;
     infos.budget=0;
     infos.abort_trans=0;
     
+    info_id=atoi(argv[1]);
+    shm_info=shmat(info_id,NULL,SHM_RDONLY);/*Attaching to shm with info related to processes*/
     
-    
-    shm_id=atoi(argv[1]);/*shared memory id to access shared memory with macros*/
-    shm_buf=(child*)shmat(shm_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
+    macro_id=atoi(argv[2]);
+    shm_macro=shmat(macro_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
 
     sem_id=atoi(argv[3]);
-    /*msgq_key=atoi(argv[2]);*/
-    msgq_key=msgget(getpid(),IPC_CREAT | 0660);
+
+    mastro_id=atoi(argv[4]);
+  
+    msgq_id=msgget(getpid(),IPC_CREAT | 0660);
+    msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
+    msgctl(msgq_id,IPC_SET,&msg_ds);
+    TEST_ERROR
+    
+/*Storing macros in a local variable. That way I can use macros defined in common.h*/
+    for(i=0;i<N_MACRO;i++){
+        macros[i]=shm_macro[i];
+
+    }
+
+    printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
     sops.sem_num=1;
     sops.sem_op=-1;
     sops.sem_flg=0;
     semop(sem_id,&sops,1);
+    /*
     printf("[NODE CHILD #%d] SEMVAL:%d\n",getpid(),semctl(sem_id,1,GETVAL));
-    printf("[NODE CHILD #%d] ID della SHM:%d\n",getpid(),shm_id);
-    /*Storing macros in a local variable. That way I can use macros defined in common.h*/
-    for(i=0;i<N_MACRO;i++){
-        macros[i]=shm_buf[i].pid;
-    }
+    printf("[NODE CHILD #%d] ID della SHM:%d\n",getpid(),macro_id);
+    */
+    
+
     /*Populating the pid user array*/
-    pid_users=malloc(sizeof(child)*N_USERS);
-    for(j=0,i=N_MACRO;i<N_MACRO+N_USERS;i++,j++){
-        pid_users[j].pid=shm_buf[i].pid;
-        pid_users[j].status=shm_buf[i].status;   
-    }
-    /*Populating the pid nodes array*/
-    pid_nodes=malloc(sizeof(child)*N_NODES);
-    for(j=0,i=N_MACRO+N_USERS;i<N_MACRO+N_USERS+N_NODES;i++,j++){
-        pid_nodes[j].pid=shm_buf[i].pid;
-        pid_nodes[j].status=shm_buf[i].status;  
+    pid_users=malloc(sizeof(info_process)*N_USERS);
+    for(i=0;i<N_USERS;i++){
+        pid_users[i].pid=shm_info[i].pid;  
+        pid_users[i].type=0;
+        /*printf("[USER CHILD #%d] Leggo Users #%d \n",getpid(),pid_users[i].pid);    */
+
     }
 
-    bytes_read=msgrcv(msgq_key,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
+    /*Populating the pid node array*/
+    pid_nodes=malloc(sizeof(info_process)*N_NODES);
+    for(i=0;i<N_NODES;i++){
+        pid_nodes[i].pid=shm_info[i+N_USERS].pid;  
+        pid_users[i].type=1;
+        /*printf("[USER CHILD #%d] Leggo Nodo #%d \n",getpid(),pid_nodes[i].pid); */   
+    }
+
+    bytes_read=msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
     printf("[NODE CHILD #%d] LETTI %d BYTES\n",getpid(),bytes_read);
+
     shmdt(&shm_buf);
+    msgctl(msgq_id,IPC_RMID,NULL);
     printf("[NODE CHILD] ABOUT TO ABORT\n");
-    msgctl(msgq_key,IPC_RMID,NULL);
 
     return 0;
 }
@@ -99,11 +126,15 @@ struct transaction creaTransazione(unsigned int budget){
 */
 int scritturaMastro(){
     int i=0;
-    while(mastro_area_memoria[i].eseguito == 1){
+    while(mastro_area_memoria[i].executed == 1){
         if(i>SO_REGISTRY_SIZE-1)
-            kill( getppid() , SIGUSR1 ); //SEGNALE CHE DICE AL PADRE DI TERMINARE TUTTO
+            kill( getppid() , SIGUSR1 );
         i++;
     }
+    /*
+        Scrittura del blocco nel libro_mastro[i] (l'indici "i" alla fine del ciclo avrà il valore dell'ultimo posto libero)
+    */
+}
 
 
 

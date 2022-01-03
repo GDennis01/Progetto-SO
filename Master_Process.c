@@ -29,36 +29,54 @@ P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction
 */
 /*Global variable indicating whether the master should stop its execution or not*/
 
+/*
+    Ultime modifiche
+        -03/01/2022
+            -Modifica al metodo initIPCs()
+            -Ora ci sono solo tre key: info,macro e sem
+            -Le macro vengono salvate in *shm_macro, le info dei processi in *info
+            -alarmHandler -> signalsHandler
+            -Aggiunto mastro_key e la sua relativa shared
+*/
 
-info_process *infos;
 int dims=0;
 
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
     int  i,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
-    int macros[N_MACRO],dim;
-    char str[15],str2[15],str3[15];/*Stringified key for shm*/
-    int shm_key,sem_key,msgq_key,info_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
-    char *arguments[]={NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
+    int macros[N_MACRO];
+    char str[15],str2[15],str3[15],str4[15];/*Stringified key for shm*/
+    int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
+    char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
 
     bzero(&sa,sizeof(sa));
 
-    sa.sa_handler=alarmHandler;
-
+    sa.sa_handler=signalsHandler;
+    sigaction(SIGALRM,&sa,NULL);
+    sigaction(SIGUSR1,&sa,NULL);
 
     read_macros(fd,macros);/*I read macros from file*/
     close(fd);/*I close the fd used to read macross*/
 
-    dim=sizeof(macros)+sizeof(child)*(N_USERS+N_NODES)+1;
     dims=sizeof(info_process)*(N_USERS+N_NODES);
 
-    info_key=shmget(IPC_PRIVATE,dims,IPC_CREAT | 0660);
-    infos=shmat(info_key,NULL,0660);
+    mastro_key = shmget(IPC_PRIVATE,SO_REGISTRY_SIZE*SO_BLOCK_SIZE*sizeof(transaction),IPC_CREAT| 0660); //nei figli aprilo con solo readpermit
+    
+    mastro_area_memoria = (transaction*)shmat(mastro_key, NULL, 0);  //così leggi a blocchi di transazione
 
-    initIPCS(&shm_key,&sem_key,&msgq_key,dim);
-    if(shm_key==-1){
+
+    initIPCS(&info_key,&macro_key,&sem_key,dims);
+    shm_info=shmat(info_key,NULL,0660);
+    shm_macro=shmat(macro_key,NULL,0660);
+
+
+    if(info_key==-1){
+        TEST_ERROR
+        exit(1);
+    }
+    if(macro_key==-1){
         TEST_ERROR
         exit(1);
     }
@@ -66,33 +84,32 @@ int main(int argc, char const *argv[])
         TEST_ERROR
         exit(1);
     }
-    if(msgq_key==-1){
-        TEST_ERROR
-        exit(1);
-    }
 
 
     TEST_ERROR
-    printf("[PARENT #%d] ID della SHM:%d\n",getpid(),shm_key);
+    printf("[PARENT #%d] ID della SHM_INFO:%d\n",getpid(),info_key);
     printf("[PARENT #%d] ID del SEM:%d\n",getpid(),sem_key);
     
-    sprintf(str,"%d",shm_key);/*I convert the key from int to string*/
+    sprintf(str,"%d",info_key);/*I convert the key from int to string*/
     arguments[1]=str;
-
-    sprintf(str3,"%d",sem_key);/*I convert the key from int to string*/
-    arguments[3]=str3;
     
-    sprintf(str2,"%d",msgq_key);/*I convert the key from int to string*/
+    sprintf(str2,"%d",macro_key);/*I convert the key from int to string*/
     arguments[2]=str2;/*Had to create another temporary string(str2) due to strange behaviour with sprintf*/
     
-    shm_buf=(child*)shmat(shm_key,NULL,0);/*Attaching the shm_buf variable to shared memory*/
+    sprintf(str3,"%d",sem_key);/*I convert the key from int to string*/
+    arguments[3]=str3;
+
+    sprintf(str4,"%d",mastro_key);/*I convert the key from int to string*/
+    arguments[4]=str4;
+
+  
     
     /*Writing Macros to shared memory.
     The first 12 locations of the arrays are reserved for the macros,others will be used
     to store pids and statuses of user/node processes*/
     
     for(i=0;i<N_MACRO;i++){
-        shm_buf[i].pid=macros[i];
+        shm_macro[i]=macros[i];
     }
 
     semctl(sem_key,1,SETVAL,N_NODES);
@@ -117,12 +134,10 @@ int main(int argc, char const *argv[])
 
             /*Parent code*/
             default:
-                /*N_MACRO is the offset used to calculate the first pid in shm struct*/
-                shm_buf[N_MACRO+i].pid=child_pid;
-                shm_buf[N_MACRO+i].status=1;
 
-                infos[i].pid=child_pid;
-                infos[i].type=0;
+                shm_info[i].pid=child_pid;
+                shm_info[i].type=0;
+                shm_info[i].budget=SO_BUDGET_INIT;
                 
                 /*printf("[PARENT #%d] USER CHILD appena creato ha pid %d\n",getpid(),shm_buf[N_MACRO+i].pid);*/
                 sops.sem_num=0;
@@ -151,12 +166,9 @@ int main(int argc, char const *argv[])
 
             /*Parent code*/
             default:
-            
-            shm_buf[N_MACRO+N_USERS+i].pid=child_pid;
-            shm_buf[N_MACRO+N_USERS+i].status=1;
-
-            infos[i].pid=child_pid;
-            infos[i].type=1;
+  
+            shm_info[N_USERS+i].pid=child_pid;
+            shm_info[N_USERS+i].type=1;
 
             /*printf("[PARENT #%d] NODE CHILD appena creato ha pid %d\n",getpid(),shm_buf[N_MACRO+N_USERS+i].pid);*/
             
@@ -172,31 +184,39 @@ int main(int argc, char const *argv[])
         
     
     printf("[PARENT] AFTER WAIT\n");
-   /* shmctl(shm_key,IPC_RMID,NULL);/*Detachment of shared memory
-    semctl(sem_key,0,IPC_RMID,NULL);/*Deleting semaphore
-    msgctl(msgq_key,IPC_RMID,NULL);*/
-    deleteIPCs(shm_key,sem_key,msgq_key);
+    deleteIPCs(info_key,macro_key,sem_key);
+    shmdt(mastro_area_memoria);
     printf("[PARENT] ABOUT TO ABORT\n");
     
     return 0;
 }
 
-void terminazione(info_process * infos,int reason,int dim){
+void terminazione(info_process * shm_info,int reason,int dim){
     int i=0,cnt=0;
     printf("Il motivo della terminazione è %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
     for(i=0;i<dim;i++){
-        if(infos[i].type==0){
-            printf("[User Process #%d]\nBilancio:%d\nTerminato prematuramente:%s\n",infos[i].pid,infos[i].budget,infos[i].abort_trans==1?"Sì":"No");
-            if(infos[i].abort_trans==1)
+        if(shm_info[i].type==0){
+            printf("[User Process #%d]\nBilancio:%d\nTerminato prematuramente:%s\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans==1?"Sì":"No");
+            if(shm_info[i].abort_trans==1)
                 cnt++;
-            
-        }else if(infos[i].type==1){
-            printf("[Node Process #%d]\nBilancio:%d\nTransazioni rimanenti nella transaction pool:%d\n",infos[i].pid,infos[i].budget,infos[i].abort_trans);
+            kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
+        }else if(shm_info[i].type==1){
+            printf("[Node Process #%d]\nBilancio:%d\nTransazioni rimanenti nella transaction pool:%d\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans);
+            kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
         }else printf("Errore, processo sconociuto\n");
+         
     }
     printf("Numero di Processi Utenti terminati prematuramente:%d\n",cnt);
 }
 
-void alarmHandler(int sig){
-    terminazione(infos,1,dims);
+
+void signalsHandler(int signal) {
+    switch(signal){
+    case SIGALRM:
+    case SIGUSR1: /*Libro mastro is full*/
+        terminazione(shm_info,1,dims);
+        break;
+    default:
+        printf("Bruh\n");
+    }
 }

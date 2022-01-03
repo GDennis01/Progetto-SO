@@ -52,8 +52,8 @@
 /*Struct used to send/read data from shared memory*/
 struct child *shm_buf;
 
-/*Variable used to communicate with shared memory and to log info on the ledger(Libro mastro)*/
- transaction_block *mastro_area_memoria;
+/*Shared variable used to store macros*/
+int *shm_macro;
 
 /*Struct used to define a transaction*/
 typedef struct transaction{
@@ -71,14 +71,25 @@ typedef struct transaction_block{
 	transaction transactions[SO_BLOCK_SIZE];
 } transaction_block;
 
+/*Variable used to communicate with shared memory and to log info on the ledger(Libro mastro)*/
+ transaction_block *mastro_area_memoria;
+
+
 /*Struct used to store info related to children processes(users and nodes)*/
 typedef struct info_process{
 	int budget;
 	pid_t pid;
 	/*TODO: flexata di collassare il tipo in abort_trans. 24 bit significativi per abort, i restanti per il tibo*/
-	short int type;/*0 for Users    1 for Nodes*/
-	int abort_trans;/*if type 0, users aborted(1) prematurely, if 1, # of transaction* in trans pool*/
+	short int type;	/*0 for Users    1 for Nodes*/
+	/*
+	-type 0:  abort_trans=1 -> user aborted prematurely,  abort_trans=0 -> user aborted normally
+	-type 1:  abort_trans=# of transaction* in trans pool
+	-abort_trans=-1  process has been just created
+	*/
+	int abort_trans;
 }info_process;
+
+info_process *shm_info;
 
 /*Buffer used to send/receive transactions by users and node*/
 typedef struct msgqbuf{
@@ -95,9 +106,9 @@ typedef struct child {
 /*Function used to read macros from "macros.txt". They are then saved in the then defined variable macros*/
 void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
-void initIPCS(int*shm_key,int*sem_key,int *msgq_key,int dim);
-void deleteIPCs(int shm_key,int sem_key,int msgq_key);
+void initIPCS(int *info_key,int *macro_key,int *sem_key,int dims);
+void deleteIPCs(int info_key,int macro_key,int sem_key);
 void updateInfos(int budget,int abort_trans,info_process*infos);
 void terminazione(info_process *infos,int reason,int dim);
-void alarmHandler(int sig);
+void signalsHandler(int sig);
 struct transaction creaTransazione(unsigned int budget);

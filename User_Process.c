@@ -1,7 +1,13 @@
 /*
     Ultime modifiche
-        -30/12/2021
-            -Aggiunta "tr.executed=1" alla fine di creazione di una transazione
+     -03/01/2021
+        -Ora ci sono solo tre key: info,macro e sem
+        -Le macro vora engono salvate in *shm_macro, le info dei processi in *info
+        -alarmHandler -> signalsHandler
+        -Aggiunto mastro_key/id e la sua relativa shared memory
+
+    -30/12/2021
+        -Aggiunta "tr.executed=1" alla fine di creazione di una transazione
 */
 #include "User_Process.h"
 
@@ -15,30 +21,43 @@
 				       strerror(errno));}
 /*Arrays declared globally so that I can use them inside functions*/
 int macros[N_MACRO];
-child *pid_users;
-child *pid_nodes;
+info_process *pid_users;/*Variable used to store pid of users locally*/
+info_process *pid_nodes;/*Variable used to store pid of nodes locally*/
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
-    int shm_id,msgq_id,sem_id,i,j,budget;
+    /*
+    info_id: id of shm_info
+    macro_id: id of shm_macro
+    sem_id:id of the semaphore  
+    mastro_id: id of ledger(libro mastro)
+    msgq_id: id of the message queue of the selected node
+    */
+    int info_id,macro_id,sem_id,mastro_id,msgq_id;
+    int i,j,budget;
     pid_t pid;
-    transaction tr;
+    transaction tr;/*transction to be sent*/
     transaction * tr_block,*tr_pool;
-    msgqbuf msg_buf;
-    struct sembuf sops;
-    info_process infos;
+    msgqbuf msg_buf;/*Buffer used to send transaction*/
+    struct sembuf sops;/*variable used to perform actions on semaphores*/
+    info_process infos;/*variable used to store data of the current process locally*/
 
     /*Initializing infos that will be sent every second to the master process*/
     infos.pid=getpid();
     infos.type=0;
     infos.abort_trans=0;
     
-    sem_id=atoi(argv[3]);
-    shm_id=atoi(argv[1]);/*shared memory id to access shared memory with macros*/
-    shm_buf=(child*)shmat(shm_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
-
+    
+    info_id=atoi(argv[1]);/*shared memory id to access shared memory with info related to processes*/
+    macro_id=atoi(argv[2]);/*shared memory id to access shared memory with macros*/
+    sem_id=atoi(argv[3]);/*id of semaphore*/
+    mastro_id=atoi(argv[4]);
+    
+    
+    shm_macro=shmat(macro_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
+    shm_info=shmat(info_id,NULL,SHM_RDONLY);/*Attaching to shm with info related to processes*/
     /*msgq_id=atoi(argv[2]);*/
-    printf("[USER CHILD #%d] ID del SEM:%d\n",getpid(),sem_id);
+    /*printf("[USER CHILD #%d] ID del SEM:%d\n",getpid(),sem_id);*/
 
     /*The semaphore is used to wait for nodes to finish creating their queues*/
     sops.sem_num=1;
@@ -49,7 +68,7 @@ int main(int argc, char const *argv[])
     printf("WAITING FOR SEM\n");
     /*Storing macros in a local variable. That way I can use macros defined in common.h*/
     for(i=0;i<N_MACRO;i++){
-        macros[i]=shm_buf[i].pid;
+        macros[i]=shm_macro[i];
     }
 
     /*Initializing budget*/
@@ -57,17 +76,22 @@ int main(int argc, char const *argv[])
     infos.budget=budget;
 
     /*Populating the pid user array*/
-    pid_users=malloc(sizeof(child)*N_USERS);
-    for(j=0,i=N_MACRO;i<N_MACRO+N_USERS;i++,j++){
-        pid_users[j].pid=shm_buf[i].pid;
-        pid_users[j].status=shm_buf[i].status;   
+    pid_users=malloc(sizeof(info_process)*N_USERS);
+    for(i=0;i<N_USERS;i++){
+        pid_users[i].pid=shm_info[i].pid;  
+        pid_users[i].type=0;
+        /*printf("[USER CHILD #%d] Leggo User #%d \n",getpid(),pid_users[i].pid);  */
     }
+
     /*Populating the pid node array*/
-    pid_nodes=malloc(sizeof(child)*N_NODES);
-    for(j=0,i=N_MACRO+N_USERS;i<N_MACRO+N_USERS+N_NODES;i++,j++){
-        pid_nodes[j].pid=shm_buf[i].pid;
-        pid_nodes[j].status=shm_buf[i].status;   
+    pid_nodes=malloc(sizeof(info_process)*N_NODES);
+    for(i=0;i<N_NODES;i++){
+        pid_nodes[i].pid=shm_info[i+N_USERS].pid;  
+        pid_users[i].type=1;
+        /*printf("[USER CHILD #%d] Leggo Nodo #%d \n",getpid(),pid_nodes[i].pid);  */
     }
+
+    
     
     /*Creating a new transaction*/
     tr = creaTransazione(budget);
@@ -78,10 +102,11 @@ int main(int argc, char const *argv[])
     msg_buf.tr=tr;
 
     msgq_id=msgget(pid_nodes[pid].pid,0660);
+    TEST_ERROR
     msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0);
 
-    printf("[USER CHILD #%d] NODO SELEZIONATO:%d\n",getpid(),pid_nodes[pid].pid);
-    TEST_ERROR;
+    printf("[USER CHILD #%d] INVIO A MSGQ_ID: %d  -> NODO SELEZIONATO:%d\n",getpid(),msgq_id,pid_nodes[pid].pid);
+    
     shmdt(shm_buf);
     printf("[USER CHILD #%d] ABOUT TO ABORT\n",getpid());
 
@@ -141,5 +166,10 @@ void updateInfos(int budget,int abort_trans,info_process* infos){
     infos->budget=budget;
     infos->abort_trans=abort_trans;
 }
+/*TODO: fixare handle_signal(errori sintattici etc)*/
+void signalsHandler(int signal) {
 
+    /*updateInfos(budget, 0, infos); */
+    exit(EXIT_SUCCESS);
+}
 
