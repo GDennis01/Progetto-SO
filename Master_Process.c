@@ -1,11 +1,6 @@
 #include "common.c"
  /* Per poter compilare con -std=c89 -pedantic */
-/*-Creare una shared memory(vedi shmget) nel processo master con una chiave definita nel file macro.txt
--Fare execve dei processi user e nodo passando come argomento la chiave della shared memory
--Ogni processo user/nodo farà l'attach alla shmemory e leggerà il contenuto (vedere come leggere la roba dalla shared memory). Una volta finita la lettura si effettuerà il deattach
--Il processo master alla fine farà il deattach finale così da garantire la rimozione della shared memory
-(L'ho scritto come promemoria per non dimenticarmelo)
-
+/*
 GESTIONE NODI:
 Problema: Il master può creare N_NODES + X dove X varia con il crescere del tempo.
 Dove salvo questi X nodi? Dovrei avere una shared memory con una dimensione che varia nel tempo -> Impossibile
@@ -23,12 +18,6 @@ contenente tutti i nuovi nodi creati prima di lui.
 
 P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction pool di ogni nodo "originale" è piena
 */
-/*
-#define SHM_KEY "123456"
-#define SEM_KEY "11"
-*/
-/*Global variable indicating whether the master should stop its execution or not*/
-
 /*
     Ultime modifiche
         -03/01/2022
@@ -62,10 +51,9 @@ int main(int argc, char const *argv[])
 
     dims=sizeof(info_process)*(N_USERS+N_NODES);
 
-    mastro_key = shmget(IPC_PRIVATE,SO_REGISTRY_SIZE*SO_BLOCK_SIZE*sizeof(transaction),IPC_CREAT| 0660); //nei figli aprilo con solo readpermit
+    mastro_key = shmget(IPC_PRIVATE,SO_REGISTRY_SIZE*SO_BLOCK_SIZE*sizeof(transaction),IPC_CREAT| 0660); 
     
-    mastro_area_memoria = (transaction*)shmat(mastro_key, NULL, 0);  //così leggi a blocchi di transazione
-
+    mastro_area_memoria = (transaction_block*)shmat(mastro_key, NULL, 0); 
 
     initIPCS(&info_key,&macro_key,&sem_key,dims);
     shm_info=shmat(info_key,NULL,0660);
