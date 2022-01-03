@@ -65,7 +65,7 @@ int main(int argc, char const *argv[])
     initIPCS(&info_key,&macro_key,&sem_key,&mastro_key, dims);
     shm_info=shmat(info_key,NULL,0660);
     shm_macro=shmat(macro_key,NULL,0660);
-    mastro_area_memoria = (transaction*)shmat(mastro_key, NULL, 0);  /*così leggi a blocchi di transazione*/
+    mastro_area_memoria = (transaction_block*)shmat(mastro_key, NULL, 0);  /*così leggi a blocchi di transazione*/
 
 
     if(info_key==-1){
