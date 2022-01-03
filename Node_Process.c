@@ -43,16 +43,18 @@ info_process *pid_nodes;
 
     mastro_id=atoi(argv[4]);
   
-    msgq_id=msgget(getpid(),IPC_CREAT | 0660);
+    for(i=0;i<N_MACRO;i++){
+        macros[i]=shm_macro[i];
+    }
+
+    msgq_id=msgget(getpid(),IPC_CREAT | 0666);
     msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
+    msg_ds.msg_perm.mode=438;
     msgctl(msgq_id,IPC_SET,&msg_ds);
     TEST_ERROR
     
 /*Storing macros in a local variable. That way I can use macros defined in common.h*/
-    for(i=0;i<N_MACRO;i++){
-        macros[i]=shm_macro[i];
-
-    }
+    
 
     printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
