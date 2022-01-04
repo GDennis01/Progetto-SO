@@ -29,6 +29,7 @@ P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction
 */
 
 int dims=0;
+int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
 
 int main(int argc, char const *argv[])
 {
@@ -36,7 +37,6 @@ int main(int argc, char const *argv[])
     int  i,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
     char str[15],str2[15],str3[15],str4[15];/*Stringified key for shm*/
-    int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
     char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
 
@@ -76,8 +76,7 @@ int main(int argc, char const *argv[])
 
 
     TEST_ERROR
-    printf("[PARENT #%d] ID della SHM_INFO:%d\n",getpid(),info_key);
-    printf("[PARENT #%d] ID del SEM:%d\n",getpid(),sem_key);
+    printf("[PARENT #%d] ID della SHM_INFO:%d     ID del SEM:%d\n",getpid(),info_key,sem_key);
     
     sprintf(str,"%d",info_key);/*I convert the key from int to string*/
     arguments[1]=str;
@@ -103,7 +102,7 @@ int main(int argc, char const *argv[])
 
     semctl(sem_key,1,SETVAL,N_NODES);
     /*Generating user children*/
-    semctl(sem_key,0,SETVAL,N_USERS);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
+    semctl(sem_key,0,SETVAL,N_USERS+N_NODES);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
     semctl(sem_key,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
     alarm(SO_SIM_SEC);
 
@@ -155,7 +154,7 @@ int main(int argc, char const *argv[])
 
             /*Parent code*/
             default:
-  
+
             shm_info[N_USERS+i].pid=child_pid;
             shm_info[N_USERS+i].type=1;
 
@@ -168,32 +167,40 @@ int main(int argc, char const *argv[])
             break;
         }
     }
-    while(wait(&status) != -1);/*Waiting for all children to DIE*/
+    /*Waiting for all children to DIE*/
+    while(child_pid=wait(&status) != -1){
+        printf("Finished waiting process %d with status %d\n",child_pid,WEXITSTATUS(status));
+    }
         
         
     
     printf("[PARENT] AFTER WAIT\n");
-    deleteIPCs(info_key,macro_key,sem_key,mastro_key);
     printf("[PARENT] ABOUT TO ABORT\n");
     
     return 0;
 }
 
-void terminazione(info_process * shm_info,int reason,int dim){
+void terminazione(int reason,int dim){
     int i=0,cnt=0;
     printf("Il motivo della terminazione è %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
-    for(i=0;i<dim;i++){
+    for(i=0;i<dim/sizeof(info_process);i++){
+        printf("Iterazione %d°",i+1);
         if(shm_info[i].type==0){
             printf("[User Process #%d]\nBilancio:%d\nTerminato prematuramente:%s\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans==1?"Sì":"No");
             if(shm_info[i].abort_trans==1)
                 cnt++;
             kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
+            waitpid(shm_info[i].pid,NULL,0);
         }else if(shm_info[i].type==1){
             printf("[Node Process #%d]\nBilancio:%d\nTransazioni rimanenti nella transaction pool:%d\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans);
             kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
+            TEST_ERROR
+            waitpid(shm_info[i].pid,NULL,0);
+            TEST_ERROR
         }else printf("Errore, processo sconociuto\n");
          
     }
+    deleteIPCs(info_key,macro_key,sem_key,mastro_key);
     printf("Numero di Processi Utenti terminati prematuramente:%d\n",cnt);
 
     printf("Stampa libro mastro:\n");
@@ -206,10 +213,10 @@ void terminazione(info_process * shm_info,int reason,int dim){
 void signalsHandler(int signal) {
     switch(signal){
     case SIGALRM:
-        terminazione(shm_info,0,dims);
+        terminazione(0,dims);
         break;
     case SIGUSR1: /*Libro mastro is full*/
-        terminazione(shm_info,1,dims);
+        terminazione(1,dims);
         break;
     default:
         printf("Bruh\n");

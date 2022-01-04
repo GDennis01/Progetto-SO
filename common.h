@@ -108,7 +108,9 @@ void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims);
 void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
-void updateInfos(int budget,int abort_trans,info_process*infos,int index);
-void terminazione(info_process *infos,int reason,int dim);
+ int getBudget(int my_index);
+void updateBudget(int costoTransazione, int my_index);
+void updateInfos(int budget,int abort_trans,int my_index);
+void terminazione(int reason,int dim);
 void signalsHandler(int sig);
-struct transaction creaTransazione(unsigned int budget);
+struct transaction creaTransazione( int budget);	
