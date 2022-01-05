@@ -2,7 +2,12 @@
 
     TODO: implementare la meccanica del SO_RETRY
     Ultime modifiche
-    
+
+     -05/01/2022
+        -Fixato l'errore "Invalid Argument". 
+         Risiedeva nella generazione di un tempo randomico. A volte andava in overflow e quindi la nanosleep dava errore
+        -Aggiornato il metodo "creaTransazione()", ora restituisce un intero(0 se è andato a buon fine, 1 altrimenti)
+
      -04/01/2022
         -Modificato il metodo "updateInfos()"
         -Aggiunto il metodo "getBudget()"
@@ -111,26 +116,35 @@ int main(int argc, char const *argv[])
     updateInfos(SO_BUDGET_INIT, 0, my_index);
 
     printf("INITIAL budget %d\n", getBudget(my_index));
-    
+    TEST_ERROR
     while(1){
-        time.tv_nsec=(rand()+MIN_TRANS_GEN_NSEC)%MAX_TRANS_GEN_NSEC+1;
+        
+        /*time.tv_nsec=(rand()+MIN_TRANS_GEN_NSEC)%(MAX_TRANS_GEN_NSEC+1); THIS METHOD RESULTED SOMETIMES IN OVERFLOW*/
+        time.tv_nsec=rand()%(MAX_TRANS_GEN_NSEC+1-MIN_TRANS_GEN_NSEC) +MIN_TRANS_GEN_NSEC;/*[MIN_TRANS_GEN,MAX_TRANS_GEN]*/
         time.tv_sec=1;/*1 for debug mode xd*/
-        printf("[USER CHILD #%d] Current Budget:%d\n",getpid(),getBudget(my_index));
+        
         /*Creating a new transaction*/
-        tr = creaTransazione(getBudget(my_index));
-
+        /*tr = creaTransazione(getBudget(my_index));*/
+        if(creaTransazione(&tr,getBudget(my_index)) == -1){
+            printf("NOT ENOUGH BUDGET TO SEND A TRANSACTION\n");
+            raise(SIGTERM);
+        }else{
         updateBudget(tr.amount, my_index);
         /*printTransaction(tr);*/
         /*Sending the transaction to a random selected node.*/
         pid=getRndNode();
         msg_buf.mtype=pid_nodes[pid].pid;/*That way, only the selected node can read the message with type set to its pid*/
         msg_buf.tr=tr;
-
+        
         msgq_id=msgget(pid_nodes[pid].pid,0666);
-        TEST_ERROR
         msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0);
+        TEST_ERROR
         printf("[USER CHILD #%d] INVIO A MSGQ_ID: %d  -> NODO SELEZIONATO:%d\n",getpid(),msgq_id,pid_nodes[pid].pid);
-        nanosleep(&time,NULL);
+        if(nanosleep(&time,NULL)== -1){
+            TEST_ERROR
+        }
+        printf("[USER CHILD #%d] Current Budget:%d\n",getpid(),getBudget(my_index));
+        }
     }
 
     shmdt(shm_buf);
@@ -147,32 +161,31 @@ int main(int argc, char const *argv[])
     Method that create a new transaction.
     If budget is less than 2, no transaction will be created. 
 */
- struct transaction creaTransazione( int budget){
-    transaction tr;
+ int creaTransazione(struct transaction* tr,int budget){
     if(budget <2){ 
-        return tr;
+        return -1;
     }else{
     struct timespec curr_time;
 	int tmp_budget;
     int user;
     
     clock_gettime(CLOCK_REALTIME,&curr_time);
-    tmp_budget=rand()%(budget+1) +2;/*rSelecting random budget in range [2,budget]. Cannot send more money than current budget*/
+    tmp_budget=rand()%(budget+1-2) +2;/*rSelecting random budget in range [2,budget]. Cannot send more money than current budget*/
     do{
         user=(rand()%N_USERS);/*Selecting a random user in range [0,N_USERS-1]*/
     }while(pid_users[user].pid == getpid());/*This way I force sender not to send the transaction to itself*/
     
 
-	tr.timestamp = curr_time.tv_nsec;/*current clock_time*/
-	tr.sender = getpid();/*PID of the process creating the transaction*/
-	tr.receiver = pid_users[user].pid;/*choosing a random user in the range [0,N_USERS-1]. 12 is the offset(and number of macro) in the shm buffer*/
+	tr->timestamp = curr_time.tv_nsec;/*current clock_time*/
+	tr->sender = getpid();/*PID of the process creating the transaction*/
+	tr->receiver = pid_users[user].pid;/*choosing a random user in the range [0,N_USERS-1]. 12 is the offset(and number of macro) in the shm buffer*/
 	
     /*commission for node process*/
-    tr.reward=(int)((double)SO_REWARD/100*tmp_budget);/* percentage/100 * budget ie: 12% of 500 -> 12/100 * 500*/
-    tr.executed=1;
+    tr->reward=(int)((double)SO_REWARD/100*tmp_budget);/* percentage/100 * budget ie: 12% of 500 -> 12/100 * 500*/
+    tr->executed=1;
 
-    tr.amount = tmp_budget - tr.reward;/*amount to be sent is equal to: tr.amount-(so_reward*amount)*/
-    return tr;
+    tr->amount = tmp_budget - tr->reward;/*amount to be sent is equal to: tr.amount-(so_reward*amount)*/
+    return 0;
     }
 }
 void printTransaction(struct transaction tr){
@@ -186,9 +199,7 @@ int getRndNode(){
 	return rand()%N_NODES;
 }
 
- int getBudget(int my_index){
-    return shm_info[my_index].budget;
-}
+ 
 
 void updateBudget(int costoTransazione,  int my_index){
     shm_info[my_index].budget = shm_info[my_index].budget - costoTransazione;

@@ -182,9 +182,9 @@ int main(int argc, char const *argv[])
 
 void terminazione(int reason,int dim){
     int i=0,cnt=0;
-    printf("Il motivo della terminazione è %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
+    printf("-----------------------------------------------\n");
+    printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
     for(i=0;i<dim/sizeof(info_process);i++){
-        printf("Iterazione %d°",i+1);
         if(shm_info[i].type==0){
             printf("[User Process #%d]\nBilancio:%d\nTerminato prematuramente:%s\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans==1?"Sì":"No");
             if(shm_info[i].abort_trans==1)
@@ -192,11 +192,10 @@ void terminazione(int reason,int dim){
             kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
             waitpid(shm_info[i].pid,NULL,0);
         }else if(shm_info[i].type==1){
-            printf("[Node Process #%d]\nBilancio:%d\nTransazioni rimanenti nella transaction pool:%d\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans);
+            printf("[Node Process #%d ind:%d]\nBilancio:%d\nTransazioni rimanenti nella transaction pool:%d\n",shm_info[i].pid,i,shm_info[i].budget,shm_info[i].abort_trans);
             kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
-            TEST_ERROR
+            
             waitpid(shm_info[i].pid,NULL,0);
-            TEST_ERROR
         }else printf("Errore, processo sconociuto\n");
          
     }

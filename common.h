@@ -113,4 +113,4 @@ void updateBudget(int costoTransazione, int my_index);
 void updateInfos(int budget,int abort_trans,int my_index);
 void terminazione(int reason,int dim);
 void signalsHandler(int sig);
-struct transaction creaTransazione( int budget);	
+int creaTransazione(struct transaction*,int budget);	

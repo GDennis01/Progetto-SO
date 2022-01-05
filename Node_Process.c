@@ -1,8 +1,15 @@
 /*
-    TODO: Mettere una dimensione subito dopo aver fatto la msgget
-
+    TODO: Implementare la meccanica delle "transazioni rimanenti nella trans pool"
 	Ultime modifiche:
-    -03/01/2021
+
+    -05/01/2022
+        -Ora esegue correttamente il detach dalle shared memories
+        -Cambiato il modo in cui veniva generato il tempo randomico. Prima poteva dare overflow
+        -Ora il nodo salva correttamente nella shared memory il proprio bilancio.
+         Il problema era dovuto al fatto che il nodo non si salvava correttamente il proprio indice
+        -Aggiornato il metodo "creaTransazione()", ora restituisce un intero
+
+    -03/01/2022
         -Ora ci sono solo tre key: info,macro e sem
         -Le macro ora vengono salvate in *shm_macro, le info dei processi in *info
         -Impostata la dimensione massima della coda di messaggi(transazione*TP_SIZE)
@@ -20,19 +27,21 @@ info_process *pid_users;
 info_process *pid_nodes;
  struct sembuf sops;
  int msgq_id;
+ msgqbuf msg_buf;
+ int my_index=0;
  int main(int argc, char const *argv[])
 {
 
     int info_id,macro_id,sem_id,mastro_id,i,j;
     int budget;
-    int my_index=0;
+    
     int sum_reward=0;
     int bytes_read;
     struct sigaction sa;
     transaction tr;
     transaction_block block;
     struct msqid_ds msg_ds;
-    msgqbuf msg_buf;
+    
     info_process infos;
     struct timespec time;
 
@@ -64,7 +73,7 @@ info_process *pid_nodes;
     msgq_id=msgget(getpid(),IPC_CREAT | 0666);
     msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
     msg_ds.msg_perm.mode=438;
-    msgctl(msgq_id,IPC_SET,&msg_ds);
+    msgctl(msgq_id,IPC_SET,&msg_ds);/*Setting the size of the message queue equal to SO_TP_SIZE*/
     TEST_ERROR
     
 /*Storing macros in a local variable. That way I can use macros defined in common.h*/
@@ -94,21 +103,22 @@ info_process *pid_nodes;
     pid_nodes=malloc(sizeof(info_process)*N_NODES);
     for(i=0;i<N_NODES;i++){
         pid_nodes[i].pid=shm_info[i+N_USERS].pid;  
-        pid_users[i].type=1;
-        if(shm_info[i].pid==getpid()){
-            my_index=i;
+        pid_nodes[i].type=1;
+        if(shm_info[i+N_USERS].pid==getpid()){
+            my_index=i+N_USERS;
         }
         /*printf("[USER CHILD #%d] Leggo Nodo #%d \n",getpid(),pid_nodes[i].pid); */   
     }
     i=0;
-    time.tv_sec=1;/*1 for debug mode xD*/
-    time.tv_nsec=(rand()+MIN_TRANS_PROC_NSEC)%MAX_TRANS_PROC_NSEC;
+    time.tv_sec=1;/*1 for debug mode */
+    time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;/*[MIN_TRANS_PROC,MAX_TRANS_PROC]*/
     while(1){
-        
+    TEST_ERROR 
     if(i==SO_BLOCK_SIZE-1){/*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/
-        /*printf("<<node>>My budget:%d\n",shm_info[my_index].budget);*/
-        block.transactions[i]=creaTransazione(sum_reward);/*Saving the reward transaction in the last spot of the block*/
+       creaTransazione(&tr,sum_reward);/*Saving the reward transaction in the last spot of the block*/
+         block.transactions[i]=tr;
         block.executed=1;
+
         scritturaMastro(sem_id,block);
         nanosleep(&time,NULL);/*Simulating the elaboring process*/
         updateInfos(sum_reward,0,my_index);
@@ -116,7 +126,7 @@ info_process *pid_nodes;
         i=0;
         sum_reward=0;
         time.tv_sec=1;/*1 for debug mode*/
-        time.tv_nsec=(rand()+MIN_TRANS_PROC_NSEC)%MAX_TRANS_PROC_NSEC;
+        time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;    
     }
 
     bytes_read=msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
@@ -141,24 +151,22 @@ info_process *pid_nodes;
 */
 void updateInfos(int budget,int abort_trans,int index){
     shm_info[index].budget+=budget;
-    shm_info[index].abort_trans=1;
+    shm_info[index].abort_trans=abort_trans;
 }
 /*
     Creation of the reward transaction
 */
-struct transaction creaTransazione( int budget){
-    transaction tr;
+int creaTransazione(struct transaction* tr,int budget){
     struct timespec curr_time;
     clock_gettime(CLOCK_REALTIME,&curr_time);
-    srand(curr_time.tv_nsec);
-    tr.timestamp = curr_time.tv_nsec;/*current clock_time*/
-	tr.sender = -1;/*MACRO DA DEFINIRE*/
-	tr.receiver = getpid();
-	tr.amount = budget;
+    tr->timestamp = curr_time.tv_nsec;/*current clock_time*/
+	tr->sender = -1;/*MACRO DA DEFINIRE*/
+	tr->receiver = getpid();
+	tr->amount = budget;
     /*commission for node process*/
-    tr.reward=0;
-    tr.executed = 1 ;
-    return tr;
+    tr->reward=0;
+    tr->executed = 1 ;
+    return 0;
 }
 
 /*
@@ -195,8 +203,17 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
 }
 
 void signalsHandler(int signal) {
+    int trans_left=0;
+    printf("STO PER MORIRE FRATM\n");
+    /*Counting how many transactions are left in the transaction pool(aka message queue)*/
+    while(msgrcv(msgq_id,NULL,sizeof(msg_buf.tr),getpid(),IPC_NOWAIT) != -1){
+        trans_left++;
+        printf("TRANS LEFT:%d\n",trans_left);
+    }
+    updateInfos(0,trans_left,my_index);
     shmdt(shm_info);
     shmdt(shm_macro);
+    shmdt(mastro_area_memoria);
     msgctl(msgq_id,IPC_RMID,NULL);
     printf("<<nodo>> %d ha pulito tutto :) \n", getpid());
     exit(EXIT_SUCCESS);
