@@ -8,6 +8,8 @@
         -Ora il nodo salva correttamente nella shared memory il proprio bilancio.
          Il problema era dovuto al fatto che il nodo non si salvava correttamente il proprio indice
         -Aggiornato il metodo "creaTransazione()", ora restituisce un intero
+        -Se la nuova dimensione della coda risulta esser maggiore della massima consentita, allora 
+         non la aggiorno.
 
     -03/01/2022
         -Ora ci sono solo tre key: info,macro e sem
@@ -71,11 +73,12 @@ info_process *pid_nodes;
     }
 
     msgq_id=msgget(getpid(),IPC_CREAT | 0666);
-    msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
+    if(sizeof(transaction)*SO_TP_SIZE < 16384)
+   { msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
     msg_ds.msg_perm.mode=438;
     msgctl(msgq_id,IPC_SET,&msg_ds);/*Setting the size of the message queue equal to SO_TP_SIZE*/
     TEST_ERROR
-
+}
     printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
     sops.sem_num=1;
@@ -110,6 +113,7 @@ info_process *pid_nodes;
     i=0;
     time.tv_sec=1;/*1 for debug mode */
     time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;/*[MIN_TRANS_PROC,MAX_TRANS_PROC]*/
+    TEST_ERROR
     while(1){
     TEST_ERROR 
     if(i==SO_BLOCK_SIZE-1){/*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/

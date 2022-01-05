@@ -79,6 +79,7 @@ int main(int argc, char const *argv[])
         TEST_ERROR
         exit(1);
     }
+    
     mastro_area_memoria[0].executed=0;
     
 
