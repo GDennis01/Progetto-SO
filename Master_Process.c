@@ -27,14 +27,20 @@ P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction
             -alarmHandler -> signalsHandler
             -Aggiunto mastro_key e la sua relativa shared
 */
-
+void printTransaction(struct transaction tr){
+    printf("[MASTER PROCESS]Sender:%d\n",tr.sender);
+    printf("[MASTER PROCESS]Receiver:%d\n",tr.receiver);
+    printf("[MASTER PROCESS]Reward:%d\n",tr.reward);
+    printf("[MASTER PROCESS]Timestamp:%ld\n",tr.timestamp);
+    printf("[MASTER PROCESS]Amount:%d\n",tr.amount);
+}
 int dims=0;
 int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
 
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
-    int  i,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
+    int  i,j,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
     char str[15],str2[15],str3[15],str4[15];/*Stringified key for shm*/
     char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
@@ -73,7 +79,8 @@ int main(int argc, char const *argv[])
         TEST_ERROR
         exit(1);
     }
-
+    mastro_area_memoria[0].executed=0;
+    
 
     TEST_ERROR
     printf("[PARENT #%d] ID della SHM_INFO:%d     ID del SEM:%d\n",getpid(),info_key,sem_key);
@@ -171,41 +178,53 @@ int main(int argc, char const *argv[])
     while(child_pid=wait(&status) != -1){
         printf("Finished waiting process %d with status %d\n",child_pid,WEXITSTATUS(status));
     }
-        
-        
-    
-    printf("[PARENT] AFTER WAIT\n");
     printf("[PARENT] ABOUT TO ABORT\n");
     
     return 0;
 }
 
 void terminazione(int reason,int dim){
-    int i=0,cnt=0;
+    int i=0,j=0,cnt=0;
     printf("-----------------------------------------------\n");
     printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
     for(i=0;i<dim/sizeof(info_process);i++){
         if(shm_info[i].type==0){
+            printf("------------------------------------\n");
             printf("[User Process #%d]\nBilancio:%d\nTerminato prematuramente:%s\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans==1?"Sì":"No");
+            printf("------------------------------------\n");
+
             if(shm_info[i].abort_trans==1)
                 cnt++;
             kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
             waitpid(shm_info[i].pid,NULL,0);
         }else if(shm_info[i].type==1){
+                        printf("------------------------------------\n");
+
             printf("[Node Process #%d ind:%d]\nBilancio:%d\nTransazioni rimanenti nella transaction pool:%d\n",shm_info[i].pid,i,shm_info[i].budget,shm_info[i].abort_trans);
+                        printf("------------------------------------\n");
+
             kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
             
             waitpid(shm_info[i].pid,NULL,0);
         }else printf("Errore, processo sconociuto\n");
          
     }
-    deleteIPCs(info_key,macro_key,sem_key,mastro_key);
+    
     printf("Numero di Processi Utenti terminati prematuramente:%d\n",cnt);
 
     printf("Stampa libro mastro:\n");
     for(i=0;i<SO_REGISTRY_SIZE;i++){
-        printf("Mastro[%d]:%d",i+1,mastro_area_memoria[i].executed);
+        printf("Mastro[%d]:%s\n",i+1,mastro_area_memoria[i].executed == 1 ? "Executed" : "Not executed");
+        for(j=0;j<SO_BLOCK_SIZE;j++){
+            printf("------------------------------\n");
+            printf("[MASTER PROCESS]Transazione %d°:\n",j+1);
+            printTransaction(mastro_area_memoria[i].transactions[j]);
+            printf("------------------------------\n");
+
+        }
+
     }
+    deleteIPCs(info_key,macro_key,sem_key,mastro_key);
 }
 
 

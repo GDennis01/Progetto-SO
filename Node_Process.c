@@ -21,7 +21,7 @@
         -Aggiunta del metodo "scritturaMastro"
 */
 #include "common.c"
-
+#define IS_SENDER -1
 int macros[N_MACRO];
 info_process *pid_users;
 info_process *pid_nodes;
@@ -75,8 +75,6 @@ info_process *pid_nodes;
     msg_ds.msg_perm.mode=438;
     msgctl(msgq_id,IPC_SET,&msg_ds);/*Setting the size of the message queue equal to SO_TP_SIZE*/
     TEST_ERROR
-    
-/*Storing macros in a local variable. That way I can use macros defined in common.h*/
 
     printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
@@ -131,7 +129,7 @@ info_process *pid_nodes;
 
     bytes_read=msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
 
-    if(bytes_read >= 32){/*It reads only 32 bytes/transaction*/
+    if(bytes_read >= 32){/*It reads only 32 bytes/transaction aka if the msgrcv went well*/
         sum_reward=sum_reward+msg_buf.tr.reward;
         block.transactions[i]=msg_buf.tr;/*Saving the transaction just read in the block to-be-executed*/
         i++;
@@ -160,7 +158,7 @@ int creaTransazione(struct transaction* tr,int budget){
     struct timespec curr_time;
     clock_gettime(CLOCK_REALTIME,&curr_time);
     tr->timestamp = curr_time.tv_nsec;/*current clock_time*/
-	tr->sender = -1;/*MACRO DA DEFINIRE*/
+	tr->sender = IS_SENDER;/*MACRO DA DEFINIRE*/
 	tr->receiver = getpid();
 	tr->amount = budget;
     /*commission for node process*/
@@ -186,6 +184,7 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
         kill( getppid() , SIGUSR1 );
         return 0;
     }else{
+        mastro_area_memoria[i+1].executed=0;
         sops.sem_num=2;
         sops.sem_op=-1;
         sops.sem_flg=0;
@@ -204,7 +203,6 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
 
 void signalsHandler(int signal) {
     int trans_left=0;
-    printf("STO PER MORIRE FRATM\n");
     /*Counting how many transactions are left in the transaction pool(aka message queue)*/
     while(msgrcv(msgq_id,NULL,sizeof(msg_buf.tr),getpid(),IPC_NOWAIT) != -1){
         trans_left++;

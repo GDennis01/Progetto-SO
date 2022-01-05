@@ -1,0 +1,582 @@
+./master
+INITIAL budget 1000
+[USER CHILD #76811] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+[USER CHILD #76811] Current Budget:401
+[USER CHILD #76811] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76811] Current Budget:6
+[USER CHILD #76811] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+[USER CHILD #76811] Current Budget:3
+[USER CHILD #76811] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+[USER CHILD #76811] Current Budget:0
+NOT ENOUGH BUDGET TO SEND A TRANSACTION
+<<user>> 76811 ha pulito tutto :) 
+INITIAL budget 1000
+[USER CHILD #76810] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76810] Current Budget:218
+[USER CHILD #76810] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76810] Current Budget:87
+[USER CHILD #76810] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76810] Current Budget:83
+[USER CHILD #76810] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76810] Current Budget:3
+[USER CHILD #76810] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76810] Current Budget:0
+NOT ENOUGH BUDGET TO SEND A TRANSACTION
+<<user>> 76810 ha pulito tutto :) 
+INITIAL budget 1000
+[USER CHILD #76808] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76808] Current Budget:761
+[USER CHILD #76808] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76808] Current Budget:634
+[USER CHILD #76808] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76808] Current Budget:184
+[USER CHILD #76808] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76808] Current Budget:138
+[USER CHILD #76808] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+[USER CHILD #76808] Current Budget:47
+[USER CHILD #76808] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76808] Current Budget:32
+[USER CHILD #76808] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+[USER CHILD #76808] Current Budget:6
+[USER CHILD #76808] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76808] Current Budget:2
+[USER CHILD #76808] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+<<user>> 76808 ha pulito tutto :) 
+INITIAL budget 1000
+[USER CHILD #76809] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+[USER CHILD #76809] Current Budget:980
+[USER CHILD #76809] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76809] Current Budget:682
+[USER CHILD #76809] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76809] Current Budget:561
+[USER CHILD #76809] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76809] Current Budget:285
+[USER CHILD #76809] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76809] Current Budget:78
+[USER CHILD #76809] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76809] Current Budget:31
+[USER CHILD #76809] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76809] Current Budget:28
+[USER CHILD #76809] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76809] Current Budget:6
+[USER CHILD #76809] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+<<user>> 76809 ha pulito tutto :) 
+INITIAL budget 1000
+[USER CHILD #76812] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76812] Current Budget:632
+[USER CHILD #76812] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76812] Current Budget:573
+[USER CHILD #76812] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76812] Current Budget:485
+[USER CHILD #76812] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76812] Current Budget:447
+[USER CHILD #76812] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76812] Current Budget:335
+[USER CHILD #76812] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+[USER CHILD #76812] Current Budget:129
+[USER CHILD #76812] INVIO A MSGQ_ID: 98319  -> NODO SELEZIONATO:76814
+[USER CHILD #76812] Current Budget:44
+[USER CHILD #76812] INVIO A MSGQ_ID: 98317  -> NODO SELEZIONATO:76813
+[USER CHILD #76812] Current Budget:14
+[USER CHILD #76812] INVIO A MSGQ_ID: 98318  -> NODO SELEZIONATO:76815
+<<user>> 76812 ha pulito tutto :) 
+[NODE CHILD #76813] MY MSGQ_ID : 98317
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+[NODE CHILD #76813] LETTI 32 BYTES
+<<nodo>> 76813 ha pulito tutto :) 
+[NODE CHILD #76814] MY MSGQ_ID : 98319
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+[NODE CHILD #76814] LETTI 32 BYTES
+<<nodo>> 76814 ha pulito tutto :) 
+[NODE CHILD #76815] MY MSGQ_ID : 98318
+[NODE CHILD #76815] LETTI 32 BYTES
+[NODE CHILD #76815] LETTI 32 BYTES
+[NODE CHILD #76815] LETTI 32 BYTES
+[NODE CHILD #76815] LETTI 32 BYTES
+[NODE CHILD #76815] LETTI 32 BYTES
+[NODE CHILD #76815] LETTI 32 BYTES
+[NODE CHILD #76815] LETTI 32 BYTES
+[NODE CHILD #76815] LETTI 32 BYTES
+<<nodo>> 76815 ha pulito tutto :) 
+[PARENT #76807] ID della SHM_INFO:131080     ID del SEM:41
+Finished waiting process 1 with status 0
+Finished waiting process 1 with status 0
+-----------------------------------------------
+Il motivo della terminazione è: E' scaduto il tempo della simulazione 
+------------------------------------
+[User Process #76808]
+Bilancio:0
+Terminato prematuramente:No
+------------------------------------
+------------------------------------
+[User Process #76809]
+Bilancio:1
+Terminato prematuramente:No
+------------------------------------
+------------------------------------
+[User Process #76810]
+Bilancio:0
+Terminato prematuramente:No
+------------------------------------
+------------------------------------
+[User Process #76811]
+Bilancio:0
+Terminato prematuramente:No
+------------------------------------
+------------------------------------
+[User Process #76812]
+Bilancio:5
+Terminato prematuramente:No
+------------------------------------
+------------------------------------
+[Node Process #76813 ind:5]
+Bilancio:8
+Transazioni rimanenti nella transaction pool:0
+------------------------------------
+------------------------------------
+[Node Process #76814 ind:6]
+Bilancio:22
+Transazioni rimanenti nella transaction pool:0
+------------------------------------
+------------------------------------
+[Node Process #76815 ind:7]
+Bilancio:6
+Transazioni rimanenti nella transaction pool:0
+------------------------------------
+Numero di Processi Utenti terminati prematuramente:0
+Stampa libro mastro:
+Mastro[1]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76808
+[MASTER PROCESS]Reward:3
+[MASTER PROCESS]Timestamp:378419756
+[MASTER PROCESS]Amount:368
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76810
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:7
+[MASTER PROCESS]Timestamp:378431692
+[MASTER PROCESS]Amount:782
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76810
+[MASTER PROCESS]Reward:2
+[MASTER PROCESS]Timestamp:378470920
+[MASTER PROCESS]Amount:239
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:479849625
+[MASTER PROCESS]Amount:59
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76814
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:479937999
+[MASTER PROCESS]Amount:12
+------------------------------
+Mastro[2]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76809
+[MASTER PROCESS]Receiver:76808
+[MASTER PROCESS]Reward:3
+[MASTER PROCESS]Timestamp:553192858
+[MASTER PROCESS]Amount:298
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:675544751
+[MASTER PROCESS]Amount:88
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76809
+[MASTER PROCESS]Receiver:76812
+[MASTER PROCESS]Reward:1
+[MASTER PROCESS]Timestamp:684857040
+[MASTER PROCESS]Amount:121
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76810
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:696884357
+[MASTER PROCESS]Amount:4
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76813
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:696911897
+[MASTER PROCESS]Amount:4
+------------------------------
+Mastro[3]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76811
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:3
+[MASTER PROCESS]Timestamp:512785940
+[MASTER PROCESS]Amount:395
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76810
+[MASTER PROCESS]Receiver:76808
+[MASTER PROCESS]Reward:1
+[MASTER PROCESS]Timestamp:549159951
+[MASTER PROCESS]Amount:131
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76812
+[MASTER PROCESS]Reward:1
+[MASTER PROCESS]Timestamp:555753921
+[MASTER PROCESS]Amount:127
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:777364307
+[MASTER PROCESS]Amount:38
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76814
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:777383000
+[MASTER PROCESS]Amount:5
+------------------------------
+Mastro[4]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76811
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:6
+[MASTER PROCESS]Timestamp:378416662
+[MASTER PROCESS]Amount:599
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76809
+[MASTER PROCESS]Receiver:76808
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:378465267
+[MASTER PROCESS]Amount:20
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76811
+[MASTER PROCESS]Receiver:76812
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:657561495
+[MASTER PROCESS]Amount:3
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76811
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:813138179
+[MASTER PROCESS]Amount:3
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76815
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:813159503
+[MASTER PROCESS]Amount:6
+------------------------------
+Mastro[5]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76810
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:854568975
+[MASTER PROCESS]Amount:80
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76812
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:875305417
+[MASTER PROCESS]Amount:46
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76809
+[MASTER PROCESS]Receiver:76808
+[MASTER PROCESS]Reward:2
+[MASTER PROCESS]Timestamp:882807484
+[MASTER PROCESS]Amount:276
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:1
+[MASTER PROCESS]Timestamp:972133679
+[MASTER PROCESS]Amount:112
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76814
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:972151729
+[MASTER PROCESS]Amount:3
+------------------------------
+Mastro[6]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76810
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:18077356
+[MASTER PROCESS]Amount:3
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76809
+[MASTER PROCESS]Receiver:76808
+[MASTER PROCESS]Reward:2
+[MASTER PROCESS]Timestamp:70113434
+[MASTER PROCESS]Amount:207
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76809
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:197194202
+[MASTER PROCESS]Amount:47
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76808
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:276031159
+[MASTER PROCESS]Amount:85
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76814
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:276075858
+[MASTER PROCESS]Amount:2
+------------------------------
+Mastro[7]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76810
+[MASTER PROCESS]Reward:4
+[MASTER PROCESS]Timestamp:730639824
+[MASTER PROCESS]Amount:450
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:137609705
+[MASTER PROCESS]Amount:15
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76809
+[MASTER PROCESS]Receiver:76812
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:369364030
+[MASTER PROCESS]Amount:3
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76811
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:420195656
+[MASTER PROCESS]Amount:4
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76813
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:420217136
+[MASTER PROCESS]Amount:4
+------------------------------
+Mastro[8]:Executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76812
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:33466689
+[MASTER PROCESS]Amount:91
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:2
+[MASTER PROCESS]Timestamp:167318066
+[MASTER PROCESS]Amount:206
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:76808
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:237760972
+[MASTER PROCESS]Amount:26
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:76812
+[MASTER PROCESS]Receiver:76809
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:625279333
+[MASTER PROCESS]Amount:9
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:-1
+[MASTER PROCESS]Receiver:76815
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:625326853
+[MASTER PROCESS]Amount:2
+------------------------------
+Mastro[9]:Not executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+Mastro[10]:Not executed
+------------------------------
+[MASTER PROCESS]Transazione 1°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 2°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 3°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 4°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+------------------------------
+[MASTER PROCESS]Transazione 5°:
+[MASTER PROCESS]Sender:0
+[MASTER PROCESS]Receiver:0
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:0
+[MASTER PROCESS]Amount:0
+------------------------------
+[PARENT] ABOUT TO ABORT

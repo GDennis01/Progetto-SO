@@ -37,7 +37,7 @@
 #define N_USERS macros[0]
 #define N_NODES macros[1]
 #define MIN_TRANS_GEN_NSEC macros[2]
-#define MAX_TRANS_GEN_NSEC macros[3]
+#define MAX_TRANS_GEN_NSEC macros[3] 
 #define MIN_TRANS_PROC_NSEC macros[4]
 #define MAX_TRANS_PROC_NSEC macros[5]
 #define SO_BUDGET_INIT macros[6]
@@ -47,7 +47,7 @@
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
 #define SO_BLOCK_SIZE 5
-#define SO_REGISTRY_SIZE 11
+#define SO_REGISTRY_SIZE 10
 
 /*Struct used to send/read data from shared memory*/
 struct child *shm_buf;
@@ -108,7 +108,7 @@ void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims);
 void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
- int getBudget(int my_index);
+int getBudget(int my_index);
 void updateBudget(int costoTransazione, int my_index);
 void updateInfos(int budget,int abort_trans,int my_index);
 void terminazione(int reason,int dim);
