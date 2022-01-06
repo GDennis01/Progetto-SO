@@ -22,3 +22,5 @@ clean:
 	rm master
 	rm User
 	rm Node
+	rm cache.txt
+	rm file.dump

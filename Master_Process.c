@@ -47,7 +47,6 @@ int main(int argc, char const *argv[])
     struct sembuf sops;
 
     bzero(&sa,sizeof(sa));
-
     sa.sa_handler=signalsHandler;
     sigaction(SIGALRM,&sa,NULL);
     sigaction(SIGUSR1,&sa,NULL);

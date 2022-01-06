@@ -2,6 +2,10 @@
 
     TODO: implementare la meccanica del SO_RETRY
     Ultime modifiche
+     -06/01/2022
+        -Parziale implementazione della lista di transazioni locali(cache)
+        -Parziale implementazione del metodo checkLedger(tr);
+        -Aggiunta di una fprintf per stampare la cache in un file (cache.txt) per il debug
 
      -05/01/2022
         -Fixato l'errore "Invalid Argument". 
@@ -39,7 +43,7 @@
 int macros[N_MACRO];
 info_process *pid_users;/*Variable used to store pid of users locally*/
 info_process *pid_nodes;/*Variable used to store pid of nodes locally*/
-
+FILE *fd;/*For debug purposes only(used to access the cache.txt)*/
 
 int main(int argc, char const *argv[])
 {
@@ -53,6 +57,7 @@ int main(int argc, char const *argv[])
     */
     int info_id,macro_id,sem_id,mastro_id,msgq_id;
     int i,j,budget;
+    
     int my_index=0;
     pid_t pid;
     transaction tr;/*transction to be sent*/
@@ -62,8 +67,9 @@ int main(int argc, char const *argv[])
     info_process infos;/*variable used to store data of the current process locally*/
     struct timespec time;
 
+    fd=fopen("cache.txt","a");
+
     srand(getpid());
-    /*Initializing infos that will be sent every second to the master process*/
     
     /* signal handler */
     bzero(&sa,sizeof(sa));
@@ -72,12 +78,13 @@ int main(int argc, char const *argv[])
     sigaction(SIGTERM,&sa,NULL);
     sigaction(SIGUSR1,&sa,NULL);
     
+    /*retrieving keys sent by master process*/
     info_id=atoi(argv[1]);/*shared memory id to access shared memory with info related to processes*/
     macro_id=atoi(argv[2]);/*shared memory id to access shared memory with macros*/
     sem_id=atoi(argv[3]);/*id of semaphore*/
     mastro_id=atoi(argv[4]);
     
-    
+    /*Attaching to shared memories*/
     shm_macro=(int*)shmat(macro_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
     shm_info=(info_process*)shmat(info_id,NULL,0666);/*Attaching to shm with info related to processes*/
     /*msgq_id=atoi(argv[2]);*/
@@ -115,6 +122,9 @@ int main(int argc, char const *argv[])
 
     updateInfos(SO_BUDGET_INIT, 0, my_index);
 
+    /*Initializing the list of transaction sent but not yet written in the ledger*/
+    trans_sent=(transaction*)malloc(sizeof(transaction));
+
     printf("INITIAL budget %d\n", getBudget(my_index));
     TEST_ERROR
     while(1){
@@ -139,6 +149,13 @@ int main(int argc, char const *argv[])
         msgq_id=msgget(pid_nodes[pid].pid,0666);
         msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0);
         TEST_ERROR
+
+        /*Updating the local transaction list*/
+        trans_sent[trans_sent_Index]= tr;/*Saving the transaction sent locally*/
+        trans_sent_Index=trans_sent_Index+1;/*Incrementing by 1 the index*/
+        trans_sent=realloc(trans_sent,sizeof(transaction)*(trans_sent_Index+1));/*Incrementing by 1 unit(transaction) the size of the list*/
+        fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),trans_sent_Index+1,tr.sender,tr.receiver,tr.timestamp,tr.reward,tr.amount);
+
         printf("[USER CHILD #%d] INVIO A MSGQ_ID: %d  -> NODO SELEZIONATO:%d\n",getpid(),msgq_id,pid_nodes[pid].pid);
         if(nanosleep(&time,NULL)== -1){
             TEST_ERROR
@@ -185,6 +202,7 @@ int main(int argc, char const *argv[])
     tr->executed=1;
 
     tr->amount = tmp_budget - tr->reward;/*amount to be sent is equal to: tr.amount-(so_reward*amount)*/
+    
     return 0;
     }
 }
@@ -200,8 +218,35 @@ int getRndNode(){
 }
 
  
-
+/*TODO: il budget và calcolato controllando il libro mastro
+  TODO: usare semafori per scrivere il budget  */
 void updateBudget(int costoTransazione,  int my_index){
+    /*int i=0,j=0;
+    int budget=SO_BUDGET_INIT;
+    int amount;
+    transaction tmp;
+
+    /*Subtracting the money of the transaction sent BUT NOT yet written in the ledger 
+    for(i=0;i<trans_sent_Index;i++){
+       tmp=trans_sent[i];
+       if(checkLedger(trans_sent[i]) == 0){/*I subtract only if the transaction is not written in the ledger
+           budget=budget - tmp.amount;
+       }
+    }
+    */
+    /**
+    for(i=0;i<SO_REGISTRY_SIZE;i++){
+        for(j=0;j<SO_BLOCK_SIZE;j++){
+            if(mastro_area_memoria[i].executed){/*if its not an empty block
+                /*If the sender is the user itself, then of course I have to subtract the amount
+                if(mastro_area_memoria[i].transactions[j].sender == getpid())
+                    budget=budget - mastro_area_memoria[i].transactions[j].amount;
+                /*If the receiver is the user itself, then of course I have to add the amount
+                if(mastro_area_memoria[i].transactions[j].receiver == getpid())
+                    budget=budget + mastro_area_memoria[i].transactions[j].amount;
+            }
+        }
+    }*/
     shm_info[my_index].budget = shm_info[my_index].budget - costoTransazione;
 }
 
@@ -211,12 +256,57 @@ void updateInfos(int budget,int abort_trans,int my_index){
     shm_info[my_index].budget=budget;
     shm_info[my_index].abort_trans=abort_trans;
 }
-/*TODO: fixare handle_signal(errori sintattici etc)*/
+/*FIXME: fixare handle_signal(errori sintattici etc)*/
 void signalsHandler(int signal) {
     shmdt(shm_macro);
     shmdt(shm_info);
     
     printf("<<user>> %d ha pulito tutto :) \n", getpid());
     exit(EXIT_SUCCESS);
+}
+
+/*Method that checks the whole ledger and match if the transaction sent by the user is written in it*/
+int checkLedger(transaction tr){
+    int i=0,j=0;
+    int amount=0;
+    transaction curr_tr;/*auxiliary variable so the code looks cleaner :)*/
+    for(i=0;i<SO_REGISTRY_SIZE;i++){
+        for(j=0;j<SO_BLOCK_SIZE;j++){
+            /*The tuple sender+timestamp is enough for a unique identifier
+              Thus I check if the transaction sent is already written in the ledger(libro mastro)*/
+           curr_tr=mastro_area_memoria[i].transactions[j];
+           if(curr_tr.sender == tr.sender && curr_tr.timestamp == tr.timestamp){
+ 
+               /*TODO: remove transaction from trans list*/
+               /*                removeTrans(tr);                       */
+               trans_sent=removeTrans(tr);
+               return 1;/*Transaction found*/
+           }
+            
+        }
+    }
+    return 0;/*Transaction not found*/
+}
+
+transaction * removeTrans(transaction  tr){
+    int i=0,j=0;
+    transaction* tmp;
+    /*Finding the index of the transaction to remove and exiting the loop when found*/
+    for(i=0;i<trans_sent_Index;i++){
+        if(trans_sent[i].sender == tr.sender && trans_sent[i].timestamp == tr.timestamp){
+            break;
+        }
+    }
+    /*Storing all the transaction ,UP TO the transaction to remove, in temp*/
+    tmp=malloc(sizeof(transaction)*(trans_sent_Index+1));/*Temp variable equal to trans_sent*/
+    if(i!=0)
+        memcpy(tmp,trans_sent,sizeof(transaction)*i);
+    /*Copying the other transactions excluding the one to delete*/
+    if(i!=(sizeof(transaction)*(i-1)))
+        memcpy(tmp+(i*sizeof(transaction)),trans_sent+((i+1)*sizeof(transaction)),trans_sent_Index+1-i);
+    free(trans_sent);
+
+    trans_sent_Index=trans_sent_Index-1;
+    return tmp;
 }
 

@@ -10,7 +10,7 @@
 */
 /*
     TODO: spostare la funzione in master.c
-    fixare il bug dove se non c'è un \n alla fine crasha
+    FIXME:fixare il bug dove se non c'è un \n alla fine crasha
 */
 void read_macros(int fd,int * macros){
     int j=0,i,tmp;

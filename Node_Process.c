@@ -1,5 +1,5 @@
 /*
-    TODO: Implementare la meccanica delle "transazioni rimanenti nella trans pool"
+   
 	Ultime modifiche:
 
     -05/01/2022
@@ -208,6 +208,7 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
 void signalsHandler(int signal) {
     int trans_left=0;
     /*Counting how many transactions are left in the transaction pool(aka message queue)*/
+    /*FIXME: non conta le trans left. E' come se la trans pool fosse sempre vuota*/
     while(msgrcv(msgq_id,NULL,sizeof(msg_buf.tr),getpid(),IPC_NOWAIT) != -1){
         trans_left++;
         printf("TRANS LEFT:%d\n",trans_left);
