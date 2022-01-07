@@ -44,7 +44,8 @@ int macros[N_MACRO];
 info_process *pid_users;/*Variable used to store pid of users locally*/
 info_process *pid_nodes;/*Variable used to store pid of nodes locally*/
 FILE *fd;/*For debug purposes only(used to access the cache.txt)*/
-
+struct sembuf sops;/*variable used to perform actions on semaphores*/
+int sem_id;
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
@@ -55,7 +56,7 @@ int main(int argc, char const *argv[])
     mastro_id: id of ledger(libro mastro)
     msgq_id: id of the message queue of the selected node
     */
-    int info_id,macro_id,sem_id,mastro_id,msgq_id;
+    int info_id,macro_id,mastro_id,msgq_id;
     int i,j,budget;
     
     int my_index=0;
@@ -63,7 +64,7 @@ int main(int argc, char const *argv[])
     transaction tr;/*transction to be sent*/
     transaction * tr_block,*tr_pool;
     msgqbuf msg_buf;/*Buffer used to send transaction*/
-    struct sembuf sops;/*variable used to perform actions on semaphores*/
+    
     info_process infos;/*variable used to store data of the current process locally*/
     struct timespec time;
 
@@ -90,11 +91,7 @@ int main(int argc, char const *argv[])
     /*msgq_id=atoi(argv[2]);*/
     /*printf("[USER CHILD #%d] ID del SEM:%d\n",getpid(),sem_id);*/
 
-    /*The semaphore is used to wait for nodes to finish creating their queues*/
-    sops.sem_num=1;
-    sops.sem_op=0;
-    sops.sem_flg=0;
-    semop(sem_id,&sops,1);
+   
 
     /*Storing macros in a local variable. That way I can use macros defined in common.h*/
     for(i=0;i<N_MACRO;i++){
@@ -122,6 +119,11 @@ int main(int argc, char const *argv[])
 
     updateInfos(SO_BUDGET_INIT, 0, my_index);
 
+     /*The semaphore is used to wait for nodes to finish creating their queues*/
+    sops.sem_num=1;
+    sops.sem_op=0;
+    sops.sem_flg=0;
+    semop(sem_id,&sops,1);
     /*Initializing the list of transaction sent but not yet written in the ledger*/
     trans_sent=(transaction*)malloc(sizeof(transaction));
 
@@ -139,7 +141,7 @@ int main(int argc, char const *argv[])
             printf("NOT ENOUGH BUDGET TO SEND A TRANSACTION\n");
             raise(SIGTERM);
         }else{
-        updateBudget(tr.amount, my_index);
+        
         /*printTransaction(tr);*/
         /*Sending the transaction to a random selected node.*/
         pid=getRndNode();
@@ -148,15 +150,16 @@ int main(int argc, char const *argv[])
         
         msgq_id=msgget(pid_nodes[pid].pid,0666);
         msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0);
-        TEST_ERROR
 
         /*Updating the local transaction list*/
         trans_sent[trans_sent_Index]= tr;/*Saving the transaction sent locally*/
         trans_sent_Index=trans_sent_Index+1;/*Incrementing by 1 the index*/
         trans_sent=realloc(trans_sent,sizeof(transaction)*(trans_sent_Index+1));/*Incrementing by 1 unit(transaction) the size of the list*/
-        fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),trans_sent_Index+1,tr.sender,tr.receiver,tr.timestamp,tr.reward,tr.amount);
+        
+        updateBudget(tr.amount, my_index);
+        fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),trans_sent_Index,tr.sender,tr.receiver,tr.timestamp,tr.reward,tr.amount);
 
-        printf("[USER CHILD #%d] INVIO A MSGQ_ID: %d  -> NODO SELEZIONATO:%d\n",getpid(),msgq_id,pid_nodes[pid].pid);
+        printf("[USER CHILD #%d] Invio a USER #%d di %d\n",getpid(),tr.receiver,tr.amount);
         if(nanosleep(&time,NULL)== -1){
             TEST_ERROR
         }
@@ -221,33 +224,39 @@ int getRndNode(){
 /*TODO: il budget và calcolato controllando il libro mastro
   TODO: usare semafori per scrivere il budget  */
 void updateBudget(int costoTransazione,  int my_index){
-    /*int i=0,j=0;
+    int i=0,j=0;
     int budget=SO_BUDGET_INIT;
     int amount;
     transaction tmp;
 
-    /*Subtracting the money of the transaction sent BUT NOT yet written in the ledger 
+    /*Subtracting the money of the transaction sent BUT NOT yet written in the ledger */
     for(i=0;i<trans_sent_Index;i++){
        tmp=trans_sent[i];
-       if(checkLedger(trans_sent[i]) == 0){/*I subtract only if the transaction is not written in the ledger
+      /* if(checkLedger(trans_sent[i]) == 0){
            budget=budget - tmp.amount;
-       }
+       }*/
+       budget=budget-tmp.amount;
     }
-    */
-    /**
+    
+    /*
     for(i=0;i<SO_REGISTRY_SIZE;i++){
         for(j=0;j<SO_BLOCK_SIZE;j++){
             if(mastro_area_memoria[i].executed){/*if its not an empty block
-                /*If the sender is the user itself, then of course I have to subtract the amount
+               
                 if(mastro_area_memoria[i].transactions[j].sender == getpid())
                     budget=budget - mastro_area_memoria[i].transactions[j].amount;
-                /*If the receiver is the user itself, then of course I have to add the amount
+               
                 if(mastro_area_memoria[i].transactions[j].receiver == getpid())
                     budget=budget + mastro_area_memoria[i].transactions[j].amount;
             }
         }
     }*/
+   
+
+    TEST_ERROR
     shm_info[my_index].budget = shm_info[my_index].budget - costoTransazione;
+     
+    
 }
 
 void updateInfos(int budget,int abort_trans,int my_index){

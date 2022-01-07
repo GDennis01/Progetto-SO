@@ -1,441 +1,99 @@
 ./master
 INITIAL budget 1000
-[USER CHILD #30087] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30087] Current Budget:904
-[USER CHILD #30087] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30087] Current Budget:129
-[USER CHILD #30087] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30087] Current Budget:13
-[USER CHILD #30087] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30087] Current Budget:0
-NOT ENOUGH BUDGET TO SEND A TRANSACTION
-<<user>> 30087 ha pulito tutto :) 
+USER #39083 amount:884
+[USER CHILD #39083] Invio a USER #39085 di 884
+[USER CHILD #39083] Current Budget:116
+USER #39083 amount:884
+USER #39083 amount:85
+[USER CHILD #39083] Invio a USER #39085 di 85
+<<user>> 39083 ha pulito tutto :) 
 INITIAL budget 1000
-[USER CHILD #30083] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30083] Current Budget:439
-[USER CHILD #30083] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30083] Current Budget:351
-[USER CHILD #30083] INVIO A MSGQ_ID: 50  -> NODO SELEZIONATO:30090
-[USER CHILD #30083] Current Budget:114
-[USER CHILD #30083] INVIO A MSGQ_ID: 50  -> NODO SELEZIONATO:30090
-[USER CHILD #30083] Current Budget:1
-NOT ENOUGH BUDGET TO SEND A TRANSACTION
-<<user>> 30083 ha pulito tutto :) 
+USER #39084 amount:344
+[USER CHILD #39084] Invio a USER #39085 di 344
+[USER CHILD #39084] Current Budget:656
+USER #39084 amount:344
+USER #39084 amount:59
+[USER CHILD #39084] Invio a USER #39085 di 59
+<<user>> 39084 ha pulito tutto :) 
 INITIAL budget 1000
-[USER CHILD #30086] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30086] Current Budget:685
-[USER CHILD #30086] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30086] Current Budget:400
-[USER CHILD #30086] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30086] Current Budget:210
-[USER CHILD #30086] INVIO A MSGQ_ID: 50  -> NODO SELEZIONATO:30090
-[USER CHILD #30086] Current Budget:10
-[USER CHILD #30086] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30086] Current Budget:1
-NOT ENOUGH BUDGET TO SEND A TRANSACTION
-<<user>> 30086 ha pulito tutto :) 
-INITIAL budget 1000
-[USER CHILD #30085] INVIO A MSGQ_ID: 50  -> NODO SELEZIONATO:30090
-[USER CHILD #30085] Current Budget:512
-[USER CHILD #30085] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30085] Current Budget:437
-[USER CHILD #30085] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30085] Current Budget:211
-[USER CHILD #30085] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30085] Current Budget:190
-[USER CHILD #30085] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30085] Current Budget:6
-[USER CHILD #30085] INVIO A MSGQ_ID: 50  -> NODO SELEZIONATO:30090
-[USER CHILD #30085] Current Budget:1
-NOT ENOUGH BUDGET TO SEND A TRANSACTION
-<<user>> 30085 ha pulito tutto :) 
-INITIAL budget 1000
-[USER CHILD #30084] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30084] Current Budget:407
-[USER CHILD #30084] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30084] Current Budget:265
-[USER CHILD #30084] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30084] Current Budget:174
-[USER CHILD #30084] INVIO A MSGQ_ID: 50  -> NODO SELEZIONATO:30090
-[USER CHILD #30084] Current Budget:97
-[USER CHILD #30084] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30084] Current Budget:71
-[USER CHILD #30084] INVIO A MSGQ_ID: 50  -> NODO SELEZIONATO:30090
-[USER CHILD #30084] Current Budget:63
-[USER CHILD #30084] INVIO A MSGQ_ID: 51  -> NODO SELEZIONATO:30088
-[USER CHILD #30084] Current Budget:54
-[USER CHILD #30084] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-[USER CHILD #30084] Current Budget:15
-[USER CHILD #30084] INVIO A MSGQ_ID: 49  -> NODO SELEZIONATO:30089
-<<user>> 30084 ha pulito tutto :) 
-[NODE CHILD #30088] MY MSGQ_ID : 51
-[NODE CHILD #30088] LETTI 32 BYTES
-[NODE CHILD #30088] LETTI 32 BYTES
-[NODE CHILD #30088] LETTI 32 BYTES
-[NODE CHILD #30088] LETTI 32 BYTES
-[NODE CHILD #30088] LETTI 32 BYTES
-[NODE CHILD #30088] LETTI 32 BYTES
-[NODE CHILD #30088] LETTI 32 BYTES
-[NODE CHILD #30088] LETTI 32 BYTES
-<<nodo>> 30088 ha pulito tutto :) 
-[NODE CHILD #30089] MY MSGQ_ID : 49
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-[NODE CHILD #30089] LETTI 32 BYTES
-<<nodo>> 30089 ha pulito tutto :) 
-[NODE CHILD #30090] MY MSGQ_ID : 50
-[NODE CHILD #30090] LETTI 32 BYTES
-[NODE CHILD #30090] LETTI 32 BYTES
-[NODE CHILD #30090] LETTI 32 BYTES
-[NODE CHILD #30090] LETTI 32 BYTES
-[NODE CHILD #30090] LETTI 32 BYTES
-[NODE CHILD #30090] LETTI 32 BYTES
-[NODE CHILD #30090] LETTI 32 BYTES
-<<nodo>> 30090 ha pulito tutto :) 
-[PARENT #30082] ID della SHM_INFO:65552     ID del SEM:14
-Finished waiting process 1 with status 0
-Finished waiting process 1 with status 0
-Finished waiting process 1 with status 0
-Finished waiting process 1 with status 0
+USER #39085 amount:455
+[USER CHILD #39085] Invio a USER #39084 di 455
+[USER CHILD #39085] Current Budget:545
+USER #39085 amount:455
+USER #39085 amount:295
+[USER CHILD #39085] Invio a USER #39083 di 295
+<<user>> 39085 ha pulito tutto :) 
+[NODE CHILD #39086] MY MSGQ_ID : 163887
+[NODE CHILD #39086] LETTI 32 BYTES
+[NODE CHILD #39086] LETTI 32 BYTES
+<<nodo>> 39086 ha pulito tutto :) 
+[NODE CHILD #39087] MY MSGQ_ID : 163886
+[NODE CHILD #39087] LETTI 32 BYTES
+[NODE CHILD #39087] LETTI 32 BYTES
+[NODE CHILD #39087] LETTI 32 BYTES
+<<nodo>> 39087 ha pulito tutto :) 
+[PARENT #39082] ID della SHM_INFO:163866     ID del SEM:48
 -----------------------------------------------
 Il motivo della terminazione è: E' scaduto il tempo della simulazione 
 ------------------------------------
-[User Process #30083]
-Bilancio:1
+[User Process #39083]
+Bilancio:31
 Terminato prematuramente:No
 ------------------------------------
 ------------------------------------
-[User Process #30084]
-Bilancio:5
+[User Process #39084]
+Bilancio:597
 Terminato prematuramente:No
 ------------------------------------
 ------------------------------------
-[User Process #30085]
-Bilancio:1
+[User Process #39085]
+Bilancio:250
 Terminato prematuramente:No
 ------------------------------------
 ------------------------------------
-[User Process #30086]
-Bilancio:1
-Terminato prematuramente:No
-------------------------------------
-------------------------------------
-[User Process #30087]
+[Node Process #39086 ind:3]
 Bilancio:0
-Terminato prematuramente:No
-------------------------------------
-------------------------------------
-[Node Process #30088 ind:5]
-Bilancio:5
 Transazioni rimanenti nella transaction pool:0
 ------------------------------------
 ------------------------------------
-[Node Process #30089 ind:6]
-Bilancio:23
-Transazioni rimanenti nella transaction pool:0
-------------------------------------
-------------------------------------
-[Node Process #30090 ind:7]
-Bilancio:9
+[Node Process #39087 ind:4]
+Bilancio:0
 Transazioni rimanenti nella transaction pool:0
 ------------------------------------
 Numero di Processi Utenti terminati prematuramente:0
 Stampa libro mastro:
-Mastro[1]:Executed
+[MASTER PROCESS] Blocco 1°:
 ------------------------------
 [MASTER PROCESS]Transazione 1°:
-[MASTER PROCESS]Sender:30086
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:3
-[MASTER PROCESS]Timestamp:211901712
-[MASTER PROCESS]Amount:315
+[MASTER PROCESS]Sender:39083
+[MASTER PROCESS]Receiver:39085
+[MASTER PROCESS]Reward:8
+[MASTER PROCESS]Timestamp:852788041
+[MASTER PROCESS]Amount:884
 ------------------------------
 ------------------------------
 [MASTER PROCESS]Transazione 2°:
-[MASTER PROCESS]Sender:30083
-[MASTER PROCESS]Receiver:30084
-[MASTER PROCESS]Reward:5
-[MASTER PROCESS]Timestamp:211908949
-[MASTER PROCESS]Amount:561
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 3°:
-[MASTER PROCESS]Sender:30084
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:5
-[MASTER PROCESS]Timestamp:212438288
-[MASTER PROCESS]Amount:593
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 4°:
-[MASTER PROCESS]Sender:30087
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:7
-[MASTER PROCESS]Timestamp:317375129
-[MASTER PROCESS]Amount:775
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 5°:
-[MASTER PROCESS]Sender:-1
-[MASTER PROCESS]Receiver:30089
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:317479111
-[MASTER PROCESS]Amount:20
-------------------------------
-Mastro[2]:Executed
-------------------------------
-[MASTER PROCESS]Transazione 1°:
-[MASTER PROCESS]Sender:30087
-[MASTER PROCESS]Receiver:30086
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:211963973
-[MASTER PROCESS]Amount:96
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 2°:
-[MASTER PROCESS]Sender:30086
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:2
-[MASTER PROCESS]Timestamp:330614287
-[MASTER PROCESS]Amount:285
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 3°:
-[MASTER PROCESS]Sender:30083
-[MASTER PROCESS]Receiver:30084
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:363276986
-[MASTER PROCESS]Amount:88
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 4°:
-[MASTER PROCESS]Sender:30085
-[MASTER PROCESS]Receiver:30087
-[MASTER PROCESS]Reward:2
-[MASTER PROCESS]Timestamp:441354593
-[MASTER PROCESS]Amount:226
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 5°:
-[MASTER PROCESS]Sender:-1
-[MASTER PROCESS]Receiver:30088
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:441459478
-[MASTER PROCESS]Amount:4
-------------------------------
-Mastro[3]:Executed
-------------------------------
-[MASTER PROCESS]Transazione 1°:
-[MASTER PROCESS]Sender:30085
-[MASTER PROCESS]Receiver:30087
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:335271078
-[MASTER PROCESS]Amount:75
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 2°:
-[MASTER PROCESS]Sender:30084
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:1
-[MASTER PROCESS]Timestamp:409673951
-[MASTER PROCESS]Amount:142
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 3°:
-[MASTER PROCESS]Sender:30087
-[MASTER PROCESS]Receiver:30085
-[MASTER PROCESS]Reward:1
-[MASTER PROCESS]Timestamp:434314349
-[MASTER PROCESS]Amount:116
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 4°:
-[MASTER PROCESS]Sender:30084
-[MASTER PROCESS]Receiver:30087
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:552284509
-[MASTER PROCESS]Amount:91
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 5°:
-[MASTER PROCESS]Sender:-1
-[MASTER PROCESS]Receiver:30089
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:552381508
-[MASTER PROCESS]Amount:2
-------------------------------
-Mastro[4]:Executed
-------------------------------
-[MASTER PROCESS]Transazione 1°:
-[MASTER PROCESS]Sender:30085
-[MASTER PROCESS]Receiver:30083
+[MASTER PROCESS]Sender:39085
+[MASTER PROCESS]Receiver:39084
 [MASTER PROCESS]Reward:4
-[MASTER PROCESS]Timestamp:211921933
-[MASTER PROCESS]Amount:488
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 2°:
-[MASTER PROCESS]Sender:30083
-[MASTER PROCESS]Receiver:30084
-[MASTER PROCESS]Reward:2
-[MASTER PROCESS]Timestamp:548622872
-[MASTER PROCESS]Amount:237
+[MASTER PROCESS]Timestamp:852829275
+[MASTER PROCESS]Amount:455
 ------------------------------
 ------------------------------
 [MASTER PROCESS]Transazione 3°:
-[MASTER PROCESS]Sender:30086
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:2
-[MASTER PROCESS]Timestamp:660307769
-[MASTER PROCESS]Amount:200
+[MASTER PROCESS]Sender:39084
+[MASTER PROCESS]Receiver:39085
+[MASTER PROCESS]Reward:0
+[MASTER PROCESS]Timestamp:966584410
+[MASTER PROCESS]Amount:59
 ------------------------------
 ------------------------------
 [MASTER PROCESS]Transazione 4°:
-[MASTER PROCESS]Sender:30083
-[MASTER PROCESS]Receiver:30087
-[MASTER PROCESS]Reward:1
-[MASTER PROCESS]Timestamp:714572450
-[MASTER PROCESS]Amount:113
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 5°:
 [MASTER PROCESS]Sender:-1
-[MASTER PROCESS]Receiver:30090
+[MASTER PROCESS]Receiver:39087
 [MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:714599499
-[MASTER PROCESS]Amount:9
+[MASTER PROCESS]Timestamp:966670752
+[MASTER PROCESS]Amount:12
 ------------------------------
-Mastro[5]:Executed
-------------------------------
-[MASTER PROCESS]Transazione 1°:
-[MASTER PROCESS]Sender:30086
-[MASTER PROCESS]Receiver:30084
-[MASTER PROCESS]Reward:1
-[MASTER PROCESS]Timestamp:494329498
-[MASTER PROCESS]Amount:190
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 2°:
-[MASTER PROCESS]Sender:30087
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:542705846
-[MASTER PROCESS]Amount:13
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 3°:
-[MASTER PROCESS]Sender:30084
-[MASTER PROCESS]Receiver:30086
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:867935010
-[MASTER PROCESS]Amount:26
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 4°:
-[MASTER PROCESS]Sender:30084
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:84820858
-[MASTER PROCESS]Amount:9
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 5°:
-[MASTER PROCESS]Sender:-1
-[MASTER PROCESS]Receiver:30088
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:84884075
-[MASTER PROCESS]Amount:1
-------------------------------
-Mastro[6]:Executed
-------------------------------
-[MASTER PROCESS]Transazione 1°:
-[MASTER PROCESS]Sender:30085
-[MASTER PROCESS]Receiver:30083
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:622616601
-[MASTER PROCESS]Amount:21
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 2°:
-[MASTER PROCESS]Sender:30086
-[MASTER PROCESS]Receiver:30087
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:786842241
-[MASTER PROCESS]Amount:9
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 3°:
-[MASTER PROCESS]Sender:30085
-[MASTER PROCESS]Receiver:30086
-[MASTER PROCESS]Reward:1
-[MASTER PROCESS]Timestamp:786878977
-[MASTER PROCESS]Amount:184
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 4°:
-[MASTER PROCESS]Sender:30084
-[MASTER PROCESS]Receiver:30086
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:199061484
-[MASTER PROCESS]Amount:39
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 5°:
-[MASTER PROCESS]Sender:-1
-[MASTER PROCESS]Receiver:30089
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:199146217
-[MASTER PROCESS]Amount:1
-------------------------------
-Mastro[7]:Not executed
-------------------------------
-[MASTER PROCESS]Transazione 1°:
-[MASTER PROCESS]Sender:0
-[MASTER PROCESS]Receiver:0
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:0
-[MASTER PROCESS]Amount:0
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 2°:
-[MASTER PROCESS]Sender:0
-[MASTER PROCESS]Receiver:0
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:0
-[MASTER PROCESS]Amount:0
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 3°:
-[MASTER PROCESS]Sender:0
-[MASTER PROCESS]Receiver:0
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:0
-[MASTER PROCESS]Amount:0
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 4°:
-[MASTER PROCESS]Sender:0
-[MASTER PROCESS]Receiver:0
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:0
-[MASTER PROCESS]Amount:0
-------------------------------
-------------------------------
-[MASTER PROCESS]Transazione 5°:
-[MASTER PROCESS]Sender:0
-[MASTER PROCESS]Receiver:0
-[MASTER PROCESS]Reward:0
-[MASTER PROCESS]Timestamp:0
-[MASTER PROCESS]Amount:0
-------------------------------
+[MASTER PROCESS] Il libro mastro ha ancora 2 blocchi liberi!
 [PARENT] ABOUT TO ABORT

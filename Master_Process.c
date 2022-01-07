@@ -107,8 +107,7 @@ int main(int argc, char const *argv[])
         shm_macro[i]=macros[i];
     }
 
-    semctl(sem_key,1,SETVAL,N_NODES);
-    /*Generating user children*/
+    semctl(sem_key,1,SETVAL,N_NODES);/*Semaphore used to allow nodes to finish creating their queues*/
     semctl(sem_key,0,SETVAL,N_USERS+N_NODES);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
     semctl(sem_key,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
     alarm(SO_SIM_SEC);
@@ -188,6 +187,10 @@ void terminazione(int reason,int dim){
     printf("-----------------------------------------------\n");
     printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
     for(i=0;i<dim/sizeof(info_process);i++){
+        kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
+        waitpid(shm_info[i].pid,NULL,0);
+    }
+    for(i=0;i<dim/sizeof(info_process);i++){
         if(shm_info[i].type==0){
             printf("------------------------------------\n");
             printf("[User Process #%d]\nBilancio:%d\nTerminato prematuramente:%s\n",shm_info[i].pid,shm_info[i].budget,shm_info[i].abort_trans==1?"Sì":"No");
@@ -195,17 +198,18 @@ void terminazione(int reason,int dim){
 
             if(shm_info[i].abort_trans==1)
                 cnt++;
-            kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
-            waitpid(shm_info[i].pid,NULL,0);
+                
+            /*kill( shm_info[i].pid , SIGTERM ); 
+            waitpid(shm_info[i].pid,NULL,0);*/
         }else if(shm_info[i].type==1){
                         printf("------------------------------------\n");
 
             printf("[Node Process #%d ind:%d]\nBilancio:%d\nTransazioni rimanenti nella transaction pool:%d\n",shm_info[i].pid,i,shm_info[i].budget,shm_info[i].abort_trans);
                         printf("------------------------------------\n");
 
-            kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
+            /*kill( shm_info[i].pid , SIGTERM ); 
             
-            waitpid(shm_info[i].pid,NULL,0);
+            waitpid(shm_info[i].pid,NULL,0);*/
         }else printf("Errore, processo sconociuto\n");
          
     }
@@ -214,7 +218,11 @@ void terminazione(int reason,int dim){
 
     printf("Stampa libro mastro:\n");
     for(i=0;i<SO_REGISTRY_SIZE;i++){
-        printf("Mastro[%d]:%s\n",i+1,mastro_area_memoria[i].executed == 1 ? "Executed" : "Not executed");
+        if(mastro_area_memoria[i].executed==0){
+            printf("[MASTER PROCESS] Il libro mastro ha ancora %d blocchi liberi!\n",SO_REGISTRY_SIZE-i);
+            break;
+        }
+        printf("[MASTER PROCESS] Blocco %d°:\n",i+1);
         for(j=0;j<SO_BLOCK_SIZE;j++){
             printf("------------------------------\n");
             printf("[MASTER PROCESS]Transazione %d°:\n",j+1);

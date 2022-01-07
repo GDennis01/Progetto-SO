@@ -1,196 +1,84 @@
 
-[USER #30087] Transazione 2°:
-	Sender:30087
-	Receiver:30086
-	Timestamp:211963973
+[USER #39083] Transazione 1°:
+	Sender:39083
+	Receiver:39085
+	Timestamp:852788041
+	Reward:8
+	Amount:884
+
+[USER #39083] Transazione 2°:
+	Sender:39083
+	Receiver:39085
+	Timestamp:1696389
 	Reward:0
-	Amount:96
+	Amount:85
 
-[USER #30087] Transazione 3°:
-	Sender:30087
-	Receiver:30083
-	Timestamp:317375129
-	Reward:7
-	Amount:775
+[USER #39084] Transazione 1°:
+	Sender:39084
+	Receiver:39085
+	Timestamp:853699995
+	Reward:3
+	Amount:344
 
-[USER #30087] Transazione 4°:
-	Sender:30087
-	Receiver:30085
-	Timestamp:434314349
-	Reward:1
-	Amount:116
-
-[USER #30087] Transazione 5°:
-	Sender:30087
-	Receiver:30083
-	Timestamp:542705846
+[USER #39084] Transazione 2°:
+	Sender:39084
+	Receiver:39085
+	Timestamp:966584410
 	Reward:0
-	Amount:13
+	Amount:59
 
-[USER #30083] Transazione 2°:
-	Sender:30083
-	Receiver:30084
-	Timestamp:211908949
-	Reward:5
-	Amount:561
+[USER #39085] Transazione 1°:
+	Sender:39085
+	Receiver:39084
+	Timestamp:852829275
+	Reward:4
+	Amount:455
 
-[USER #30083] Transazione 3°:
-	Sender:30083
-	Receiver:30084
-	Timestamp:363276986
+[USER #39085] Transazione 2°:
+	Sender:39085
+	Receiver:39083
+	Timestamp:972706923
+	Reward:2
+	Amount:295
+
+[USER #39136] Transazione 1°:
+	Sender:39136
+	Receiver:39138
+	Timestamp:844972173
+	Reward:6
+	Amount:652
+
+[USER #39136] Transazione 2°:
+	Sender:39136
+	Receiver:39137
+	Timestamp:981941818
 	Reward:0
 	Amount:88
 
-[USER #30083] Transazione 4°:
-	Sender:30083
-	Receiver:30084
-	Timestamp:548622872
-	Reward:2
-	Amount:237
-
-[USER #30083] Transazione 5°:
-	Sender:30083
-	Receiver:30087
-	Timestamp:714572450
-	Reward:1
-	Amount:113
-
-[USER #30086] Transazione 2°:
-	Sender:30086
-	Receiver:30083
-	Timestamp:211901712
-	Reward:3
-	Amount:315
-
-[USER #30086] Transazione 3°:
-	Sender:30086
-	Receiver:30083
-	Timestamp:330614287
-	Reward:2
-	Amount:285
-
-[USER #30086] Transazione 4°:
-	Sender:30086
-	Receiver:30084
-	Timestamp:494329498
-	Reward:1
-	Amount:190
-
-[USER #30086] Transazione 5°:
-	Sender:30086
-	Receiver:30083
-	Timestamp:660307769
-	Reward:2
-	Amount:200
-
-[USER #30086] Transazione 6°:
-	Sender:30086
-	Receiver:30087
-	Timestamp:786842241
+[USER #39137] Transazione 1°:
+	Sender:39137
+	Receiver:39138
+	Timestamp:844977718
 	Reward:0
-	Amount:9
+	Amount:31
 
-[USER #30085] Transazione 2°:
-	Sender:30085
-	Receiver:30083
-	Timestamp:211921933
+[USER #39137] Transazione 2°:
+	Sender:39137
+	Receiver:39138
+	Timestamp:981866014
 	Reward:4
-	Amount:488
+	Amount:479
 
-[USER #30085] Transazione 3°:
-	Sender:30085
-	Receiver:30087
-	Timestamp:335271078
+[USER #39138] Transazione 1°:
+	Sender:39138
+	Receiver:39136
+	Timestamp:845028287
+	Reward:9
+	Amount:976
+
+[USER #39138] Transazione 2°:
+	Sender:39138
+	Receiver:39136
+	Timestamp:950927793
 	Reward:0
-	Amount:75
-
-[USER #30085] Transazione 4°:
-	Sender:30085
-	Receiver:30087
-	Timestamp:441354593
-	Reward:2
-	Amount:226
-
-[USER #30085] Transazione 5°:
-	Sender:30085
-	Receiver:30083
-	Timestamp:622616601
-	Reward:0
-	Amount:21
-
-[USER #30085] Transazione 6°:
-	Sender:30085
-	Receiver:30086
-	Timestamp:786878977
-	Reward:1
-	Amount:184
-
-[USER #30085] Transazione 7°:
-	Sender:30085
-	Receiver:30083
-	Timestamp:956666955
-	Reward:0
-	Amount:5
-
-[USER #30084] Transazione 2°:
-	Sender:30084
-	Receiver:30083
-	Timestamp:212438288
-	Reward:5
-	Amount:593
-
-[USER #30084] Transazione 3°:
-	Sender:30084
-	Receiver:30083
-	Timestamp:409673951
-	Reward:1
-	Amount:142
-
-[USER #30084] Transazione 4°:
-	Sender:30084
-	Receiver:30087
-	Timestamp:552284509
-	Reward:0
-	Amount:91
-
-[USER #30084] Transazione 5°:
-	Sender:30084
-	Receiver:30083
-	Timestamp:723776399
-	Reward:0
-	Amount:77
-
-[USER #30084] Transazione 6°:
-	Sender:30084
-	Receiver:30086
-	Timestamp:867935010
-	Reward:0
-	Amount:26
-
-[USER #30084] Transazione 7°:
-	Sender:30084
-	Receiver:30085
-	Timestamp:971596277
-	Reward:0
-	Amount:8
-
-[USER #30084] Transazione 8°:
-	Sender:30084
-	Receiver:30083
-	Timestamp:84820858
-	Reward:0
-	Amount:9
-
-[USER #30084] Transazione 9°:
-	Sender:30084
-	Receiver:30086
-	Timestamp:199061484
-	Reward:0
-	Amount:39
-
-[USER #30084] Transazione 10°:
-	Sender:30084
-	Receiver:30087
-	Timestamp:372040047
-	Reward:0
-	Amount:10
+	Amount:19
