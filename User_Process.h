@@ -15,7 +15,7 @@
 transaction* trans_sent;/*list containing all transaction sent but not yet written in the ledger*/
 int trans_sent_Index=0; /*max index of the transaction list*/
 
-void printTransaction(struct transaction tr);
+void printTransaction( transaction tr);
 int getRndNode();
 int getBalance();
 int checkLedger(transaction tr);

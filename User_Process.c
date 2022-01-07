@@ -46,6 +46,8 @@ info_process *pid_nodes;/*Variable used to store pid of nodes locally*/
 FILE *fd;/*For debug purposes only(used to access the cache.txt)*/
 struct sembuf sops;/*variable used to perform actions on semaphores*/
 int sem_id;
+int my_index=0;
+int retry=0;
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
@@ -59,7 +61,7 @@ int main(int argc, char const *argv[])
     int info_id,macro_id,mastro_id,msgq_id;
     int i,j,budget;
     
-    int my_index=0;
+
     pid_t pid;
     transaction tr;/*transction to be sent*/
     transaction * tr_block,*tr_pool;
@@ -88,6 +90,7 @@ int main(int argc, char const *argv[])
     /*Attaching to shared memories*/
     shm_macro=(int*)shmat(macro_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
     shm_info=(info_process*)shmat(info_id,NULL,0666);/*Attaching to shm with info related to processes*/
+    mastro_area_memoria=(transaction_block*)shmat(mastro_id,NULL,0666);
     /*msgq_id=atoi(argv[2]);*/
     /*printf("[USER CHILD #%d] ID del SEM:%d\n",getpid(),sem_id);*/
 
@@ -127,7 +130,6 @@ int main(int argc, char const *argv[])
     /*Initializing the list of transaction sent but not yet written in the ledger*/
     trans_sent=(transaction*)malloc(sizeof(transaction));
 
-    printf("INITIAL budget %d\n", getBudget(my_index));
     TEST_ERROR
     while(1){
         
@@ -149,14 +151,23 @@ int main(int argc, char const *argv[])
         msg_buf.tr=tr;
         
         msgq_id=msgget(pid_nodes[pid].pid,0666);
-        msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0);
+        if(msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),0) == -1){
+            printf("[USER CHILD #%d] Errore. Transazione scartata\n",getpid());
+            retry++;
+        }else
+            retry=0;
+        if(retry == SO_RETRY){
+            raise(SIGTERM);
+        }
 
         /*Updating the local transaction list*/
         trans_sent[trans_sent_Index]= tr;/*Saving the transaction sent locally*/
         trans_sent_Index=trans_sent_Index+1;/*Incrementing by 1 the index*/
         trans_sent=realloc(trans_sent,sizeof(transaction)*(trans_sent_Index+1));/*Incrementing by 1 unit(transaction) the size of the list*/
         
-        updateBudget(tr.amount, my_index);
+        printf("[USER CHILD #%d] Trans con amount %d inviata al nodo %d",getpid(),tr.amount,pid);
+        /*updateBudget(tr.amount, my_index);*/
+        checkLedger(*trans_sent);
         fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),trans_sent_Index,tr.sender,tr.receiver,tr.timestamp,tr.reward,tr.amount);
 
         printf("[USER CHILD #%d] Invio a USER #%d di %d\n",getpid(),tr.receiver,tr.amount);
@@ -173,10 +184,6 @@ int main(int argc, char const *argv[])
     
     return 0;
 }
-
-
-
-
 /*
     Method that create a new transaction.
     If budget is less than 2, no transaction will be created. 
@@ -202,6 +209,8 @@ int main(int argc, char const *argv[])
 	
     /*commission for node process*/
     tr->reward=(int)((double)SO_REWARD/100*tmp_budget);/* percentage/100 * budget ie: 12% of 500 -> 12/100 * 500*/
+    tr->reward= tr->reward == 0 ? 1:tr->reward;/*Reward has to be atleast 1*/
+
     tr->executed=1;
 
     tr->amount = tmp_budget - tr->reward;/*amount to be sent is equal to: tr.amount-(so_reward*amount)*/
@@ -209,7 +218,7 @@ int main(int argc, char const *argv[])
     return 0;
     }
 }
-void printTransaction(struct transaction tr){
+void printTransaction( transaction tr){
     printf("[USER CHILD #%d]Sender:%d\n",getpid(),tr.sender);
     printf("[USER CHILD #%d]Receiver:%d\n",getpid(),tr.receiver);
     printf("[USER CHILD #%d]Reward:%d\n",getpid(),tr.reward);
@@ -237,22 +246,6 @@ void updateBudget(int costoTransazione,  int my_index){
        }*/
        budget=budget-tmp.amount;
     }
-    
-    /*
-    for(i=0;i<SO_REGISTRY_SIZE;i++){
-        for(j=0;j<SO_BLOCK_SIZE;j++){
-            if(mastro_area_memoria[i].executed){/*if its not an empty block
-               
-                if(mastro_area_memoria[i].transactions[j].sender == getpid())
-                    budget=budget - mastro_area_memoria[i].transactions[j].amount;
-               
-                if(mastro_area_memoria[i].transactions[j].receiver == getpid())
-                    budget=budget + mastro_area_memoria[i].transactions[j].amount;
-            }
-        }
-    }*/
-   
-
     TEST_ERROR
     shm_info[my_index].budget = shm_info[my_index].budget - costoTransazione;
      
@@ -265,44 +258,91 @@ void updateInfos(int budget,int abort_trans,int my_index){
     shm_info[my_index].budget=budget;
     shm_info[my_index].abort_trans=abort_trans;
 }
-/*FIXME: fixare handle_signal(errori sintattici etc)*/
-void signalsHandler(int signal) {
-    shmdt(shm_macro);
-    shmdt(shm_info);
-    
-    printf("<<user>> %d ha pulito tutto :) \n", getpid());
-    exit(EXIT_SUCCESS);
-}
+/*FIXME: fixare handle_signal(errori sintattici etc)
+  TODO: switch case con i vari segnali. se termina prematuramente(SO_RETRY ad esempio), impostare abort_trans a 1 */
 
-/*Method that checks the whole ledger and match if the transaction sent by the user is written in it*/
+
 int checkLedger(transaction tr){
-    int i=0,j=0;
-    int amount=0;
+    /*Method that checks the whole ledger and match if the transaction sent by the user is written in it
+    Cosa deve fare esattamente:
+        -Lock sul libro mastro per evitare inconsistenza dei dati
+        
+        -Controlla tutto il libro mastro, per ogni transazione dove il sender è lo user stesso
+         decrementa il budget(inizializzato a SO_BUDGET_INIT) di amount+reward
+        
+        -Controlla tutto il libro mastro, per ogni transazione dove il receiver è lo user stesso
+         aumenta il budget(inizializzato a SO_BUDGET_INIT) di amount
+
+        -Controlla la lista trans_sent, per ogni transazione controlla che sia presente sul libro mastro
+         se è così, questa transazione viene tolta dalla lista trans_sent
+         se non è così, decrementa il budget di amount+reward
+
+        -Rilascio del lock sul libro mastro
+
+        FIXME: Budget negativo, calcolo sbagliato
+*/
+    int i=0,j=0,z=0;
+    int found=0;/*0 : found   1: not found*/
+    int budget=SO_BUDGET_INIT;
     transaction curr_tr;/*auxiliary variable so the code looks cleaner :)*/
+    
+    sops.sem_num=2;
+    sops.sem_op=-1;
+    sops.sem_flg=0;
+    semop(sem_id,&sops,1);
+    printf("#%d Parto con Budget:%d\n",getpid(),budget);
     for(i=0;i<SO_REGISTRY_SIZE;i++){
-        for(j=0;j<SO_BLOCK_SIZE;j++){
-            /*The tuple sender+timestamp is enough for a unique identifier
-              Thus I check if the transaction sent is already written in the ledger(libro mastro)*/
-           curr_tr=mastro_area_memoria[i].transactions[j];
-           if(curr_tr.sender == tr.sender && curr_tr.timestamp == tr.timestamp){
- 
-               /*TODO: remove transaction from trans list*/
-               /*                removeTrans(tr);                       */
-               trans_sent=removeTrans(tr);
-               return 1;/*Transaction found*/
-           }
-            
+        if(mastro_area_memoria[i].executed == 1){
+            for(j=0;j<SO_BLOCK_SIZE;j++){
+                curr_tr = mastro_area_memoria[i].transactions[j];
+                if(curr_tr.sender == getpid())
+                    budget=budget- curr_tr.amount-curr_tr.reward;
+                else if(curr_tr.receiver == getpid())
+                    budget=budget+ curr_tr.amount;
+                printf("#%d Budget aggiornato:%d\n",getpid(),budget);
+        }
         }
     }
+   
+    for(z=0;z<trans_sent_Index;z++){
+        printf("User #%d\n",getpid());
+        printTransaction(trans_sent[z]);
+         for(i=0;i<SO_REGISTRY_SIZE && found == 0;i++){
+             if(mastro_area_memoria[i].executed == 1){
+            for(j=0;j<SO_BLOCK_SIZE && found ==0;j++){
+                curr_tr = mastro_area_memoria[i].transactions[j]; 
+                if(curr_tr.sender == trans_sent[z].sender && curr_tr.timestamp == trans_sent[z].timestamp){
+                    printf("devo rimuovere la transazione\n");
+                    found=1;
+                }
+            }
+            }
+        }
+        if(found == 0){
+            budget=budget - trans_sent[z].amount - trans_sent[z].reward;
+        }else{
+            found=0;
+        }
+    }
+     
+    shm_info[my_index].budget=budget;
+    printf("Sto per aggiornare il budget del mio pid:%d   budget:%d\n",shm_info[my_index].pid,budget);
+
+
+    sops.sem_num=2;
+    sops.sem_op=1;
+    sops.sem_flg=0;
+    semop(sem_id,&sops,1);
+
     return 0;/*Transaction not found*/
 }
-
+/*Method copied from stack overflow xd*/
 transaction * removeTrans(transaction  tr){
     int i=0,j=0;
     transaction* tmp;
     /*Finding the index of the transaction to remove and exiting the loop when found*/
     for(i=0;i<trans_sent_Index;i++){
-        if(trans_sent[i].sender == tr.sender && trans_sent[i].timestamp == tr.timestamp){
+        if(trans_sent[i].sender == tr.sender && trans_sent[i].timestamp == tr.timestamp ){
             break;
         }
     }
@@ -319,3 +359,10 @@ transaction * removeTrans(transaction  tr){
     return tmp;
 }
 
+void signalsHandler(int signal) {
+    shmdt(shm_macro);
+    shmdt(shm_info);
+    
+    printf("<<user>> %d ha pulito tutto :) \n", getpid());
+    exit(EXIT_SUCCESS);
+}

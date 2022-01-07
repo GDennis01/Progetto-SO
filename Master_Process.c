@@ -143,7 +143,7 @@ int main(int argc, char const *argv[])
     }
 
     /*Generating children node processes*/
-    semctl(sem_key,0,SETVAL,N_NODES);
+    /*semctl(sem_key,0,SETVAL,N_NODES);*/
     for(i=0;i<N_NODES;i++){
         switch(child_pid=fork()){
             /*Child code*/

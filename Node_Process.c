@@ -31,6 +31,18 @@ info_process *pid_nodes;
  int msgq_id;
  msgqbuf msg_buf;
  int my_index=0;
+ FILE * debug_blocco_nodo;
+
+ void printblocco(struct transaction_block nuovoBlocco){
+     int i=0;
+     transaction tr;
+     fprintf(debug_blocco_nodo,"[NODE CHILD #%d] Il seguente blocco è stato scritto sul mastro:\n",getpid());
+     for(i=0;i<SO_BLOCK_SIZE;i++){
+         tr=nuovoBlocco.transactions[i];
+        fprintf(debug_blocco_nodo,"\n[NODE CHILD #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),i+1,tr.sender,tr.receiver,tr.timestamp,tr.reward,tr.amount);
+
+     }
+ }
  int main(int argc, char const *argv[])
 {
 
@@ -54,6 +66,7 @@ info_process *pid_nodes;
     sigaction(SIGUSR1,&sa,NULL);
     sigaction(SIGTERM,&sa,NULL);
     
+    debug_blocco_nodo=fopen("blocchi.txt","a+");
     
     
     info_id=atoi(argv[1]);
@@ -72,19 +85,24 @@ info_process *pid_nodes;
         macros[i]=shm_macro[i];
     }
 
+    
     msgq_id=msgget(getpid(),IPC_CREAT | 0666);
-    if(sizeof(transaction)*SO_TP_SIZE < 16384)
-   { msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
+    if(sizeof(transaction)*SO_TP_SIZE < 16384){ 
+    msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
     msg_ds.msg_perm.mode=438;
     msgctl(msgq_id,IPC_SET,&msg_ds);/*Setting the size of the message queue equal to SO_TP_SIZE*/
     TEST_ERROR
-}
+    }
+
+  
+
     printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
     sops.sem_num=1;
     sops.sem_op=-1;
     sops.sem_flg=0;
     semop(sem_id,&sops,1);
+
     /*
     printf("[NODE CHILD #%d] SEMVAL:%d\n",getpid(),semctl(sem_id,1,GETVAL));
     printf("[NODE CHILD #%d] ID della SHM:%d\n",getpid(),macro_id);
@@ -138,7 +156,7 @@ info_process *pid_nodes;
         block.transactions[i]=msg_buf.tr;/*Saving the transaction just read in the block to-be-executed*/
         i++;
     }
-    printf("[NODE CHILD #%d] LETTI %d BYTES\n",getpid(),bytes_read);
+    /*printf("[NODE CHILD #%d] LETTI %d BYTES\n",getpid(),bytes_read);*/
     }
 
     /*shmdt(&shm_buf);
@@ -182,20 +200,19 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
  /* l'indice "i" alla fine del ciclo avrà il valore dell'ultimo posto libero*/    
     while(mastro_area_memoria[i].executed == 1 && i<SO_REGISTRY_SIZE){  
         i++;
-       
     }
     if(i>SO_REGISTRY_SIZE-1){ /*se posto libero è oltre i confini del mastro, vuol dire che quest'ultimo è pieno */
         kill( getppid() , SIGUSR1 );
         return 0;
     }else{
-        mastro_area_memoria[i+1].executed=0;
+       
         sops.sem_num=2;
         sops.sem_op=-1;
         sops.sem_flg=0;
         semop(semaforo_id,&sops,1); /*seize the resource, now it can write on the mastro*/
-        
+        mastro_area_memoria[i+1].executed=0;
         mastro_area_memoria[i] = nuovoBlocco; 
-
+                printblocco(nuovoBlocco);
         /* restituzione del semaforo*/
         sops.sem_op=1;
         sops.sem_num=2;
@@ -207,12 +224,12 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
 
 void signalsHandler(int signal) {
     int trans_left=0;
+     struct msqid_ds buf;
     /*Counting how many transactions are left in the transaction pool(aka message queue)*/
-    /*FIXME: non conta le trans left. E' come se la trans pool fosse sempre vuota*/
-    while(msgrcv(msgq_id,NULL,sizeof(msg_buf.tr),getpid(),IPC_NOWAIT) != -1){
-        trans_left++;
-        printf("TRANS LEFT:%d\n",trans_left);
-    }
+    msgctl(msgq_id,IPC_STAT,&buf);
+    trans_left=buf.msg_qnum;
+    printf("Il valore dei trans è:%ld\n",buf.msg_qnum);
+
     updateInfos(0,trans_left,my_index);
     shmdt(shm_info);
     shmdt(shm_macro);
