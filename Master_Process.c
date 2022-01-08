@@ -184,6 +184,9 @@ int main(int argc, char const *argv[])
 
 void terminazione(int reason,int dim){
     int i=0,j=0,cnt=0;
+    struct timespec curr_time;
+    clock_gettime(CLOCK_REALTIME,&curr_time);
+    printf("TIMESTAMP STAMPA:sec:%ld nsec:%ld\n",curr_time.tv_sec,curr_time.tv_nsec);
     printf("-----------------------------------------------\n");
     printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
     for(i=0;i<dim/sizeof(info_process);i++){

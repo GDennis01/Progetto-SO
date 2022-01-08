@@ -136,8 +136,8 @@ info_process *pid_nodes;
     TEST_ERROR 
     if(i==SO_BLOCK_SIZE-1){/*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/
        creaTransazione(&tr,sum_reward);/*Saving the reward transaction in the last spot of the block*/
-         block.transactions[i]=tr;
-        block.executed=1;
+        tr.executed=1;
+        block.transactions[i]=tr;
 
         scritturaMastro(sem_id,block);
         nanosleep(&time,NULL);/*Simulating the elaboring process*/
@@ -179,7 +179,7 @@ void updateInfos(int budget,int abort_trans,int index){
 int creaTransazione(struct transaction* tr,int budget){
     struct timespec curr_time;
     clock_gettime(CLOCK_REALTIME,&curr_time);
-    tr->timestamp = curr_time.tv_nsec;/*current clock_time*/
+    tr->timestamp = curr_time;/*current clock_time*/
 	tr->sender = IS_SENDER;/*MACRO DA DEFINIRE*/
 	tr->receiver = getpid();
 	tr->amount = budget;
@@ -201,8 +201,9 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
     while(mastro_area_memoria[i].executed == 1 && i<SO_REGISTRY_SIZE){  
         i++;
     }
-    if(i>SO_REGISTRY_SIZE-1){ /*se posto libero è oltre i confini del mastro, vuol dire che quest'ultimo è pieno */
+    if(i>SO_REGISTRY_SIZE-1){ /*se il posto libero è oltre i confini del mastro, vuol dire che quest'ultimo è pieno */
         kill( getppid() , SIGUSR1 );
+        raise(SIGTERM);/*Mi ammazzo prima che mi ammazzi il padre*/
         return 0;
     }else{
        
@@ -210,12 +211,15 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
         sops.sem_op=-1;
         sops.sem_flg=0;
         semop(semaforo_id,&sops,1); /*seize the resource, now it can write on the mastro*/
-        mastro_area_memoria[i+1].executed=0;
-        mastro_area_memoria[i] = nuovoBlocco; 
-                printblocco(nuovoBlocco);
+        mastro_area_memoria[i] = nuovoBlocco;
+        mastro_area_memoria[i].executed=1;
+        mastro_area_memoria[i+1].executed=0; 
+
+        printf("Io, Nodo #%d, ho scritto nella %d° posizione del libro mastro:\n",getpid(),i+1);
+        printblocco(nuovoBlocco);
         /* restituzione del semaforo*/
-        sops.sem_op=1;
         sops.sem_num=2;
+        sops.sem_op=1;
         sops.sem_flg=0;
         semop(semaforo_id,&sops,1); /*gives back the resource, now other nodes can write on the mastro*/
         return 1;
@@ -228,6 +232,7 @@ void signalsHandler(int signal) {
     /*Counting how many transactions are left in the transaction pool(aka message queue)*/
     msgctl(msgq_id,IPC_STAT,&buf);
     trans_left=buf.msg_qnum;
+    TEST_ERROR
     printf("Il valore dei trans è:%ld\n",buf.msg_qnum);
 
     updateInfos(0,trans_left,my_index);

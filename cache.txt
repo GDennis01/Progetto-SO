@@ -1,91 +1,70 @@
 
-[USER #7046] Transazione 1°:
-	Sender:7046
-	Receiver:7050
-	Timestamp:478688700
-	Reward:8
-	Amount:823
+[USER #4168] Transazione 1°: SI
+	Sender:4168
+	Receiver:4172
+	Timestamp:362765500
+	Reward:5
+	Amount:523
 
-[USER #7046] Transazione 2°:
-	Sender:7046
-	Receiver:7048
-	Timestamp:634693500
-	Reward:1
-	Amount:125
-
-[USER #7047] Transazione 1°:
-	Sender:7047
-	Receiver:7048
-	Timestamp:478703800
-	Reward:7
-	Amount:766
-
-[USER #7047] Transazione 2°:
-	Sender:7047
-	Receiver:7046
-	Timestamp:614796800
-	Reward:1
-	Amount:127
-
-[USER #7047] Transazione 3°:
-	Sender:7047
-	Receiver:7046
-	Timestamp:750196700
-	Reward:1
-	Amount:40
-
-[USER #7048] Transazione 1°:
-	Sender:7048
-	Receiver:7047
-	Timestamp:478716200
+[USER #4169] Transazione 1°:
+	Sender:4169
+	Receiver:4171
+	Timestamp:362803300
 	Reward:9
-	Amount:904
+	Amount:975
 
-[USER #7048] Transazione 2°:
-	Sender:7048
-	Receiver:7049
-	Timestamp:607665200
+[USER #4170] Transazione 1°: SI
+	Sender:4170
+	Receiver:4176
+	Timestamp:362789700
 	Reward:1
-	Amount:39
+	Amount:187
 
-[USER #7049] Transazione 1°:
-	Sender:7049
-	Receiver:7050
-	Timestamp:478763400
-	Reward:3
-	Amount:373
-
-[USER #7049] Transazione 2°:
-	Sender:7049
-	Receiver:7048
-	Timestamp:611585400
-	Reward:3
-	Amount:326
-
-[USER #7049] Transazione 3°:
-	Sender:7049
-	Receiver:7048
-	Timestamp:746392200
+[USER #4171] Transazione 1°: SI
+	Sender:4171
+	Receiver:4177
+	Timestamp:362775700
 	Reward:1
-	Amount:25
+	Amount:182
 
-[USER #7050] Transazione 1°:
-	Sender:7050
-	Receiver:7048
-	Timestamp:478727800
+[USER #4172] Transazione 1°: SI
+	Sender:4172
+	Receiver:4168
+	Timestamp:362872900
 	Reward:1
-	Amount:22
+	Amount:32
 
-[USER #7050] Transazione 2°:
-	Sender:7050
-	Receiver:7048
-	Timestamp:581106000
+[USER #4173] Transazione 1°: SI
+	Sender:4173
+	Receiver:4171
+	Timestamp:362814000
+	Reward:8
+	Amount:840
+
+[USER #4174] Transazione 1°:
+	Sender:4174
+	Receiver:4168
+	Timestamp:362830800
 	Reward:4
-	Amount:477
+	Amount:452
 
-[USER #7050] Transazione 3°:
-	Sender:7050
-	Receiver:7049
-	Timestamp:697665900
-	Reward:12
-	Amount:1239
+[USER #4175] Transazione 1°: SI
+	Sender:4175
+	Receiver:4173
+	Timestamp:362728600
+	Reward:2
+	Amount:269
+
+[USER #4176] Transazione 1°:
+	Sender:4176
+	Receiver:4168
+	Timestamp:362848100
+	Reward:2
+	Amount:275
+
+[USER #4177] Transazione 1°:
+	Sender:4177
+	Receiver:4171
+	Timestamp:362786000
+	Reward:7
+	Amount:792
