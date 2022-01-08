@@ -168,7 +168,7 @@ int main(int argc, char const *argv[])
         printf("[USER CHILD #%d] Trans con amount %d inviata al nodo %d",getpid(),tr.amount,pid);
         /*updateBudget(tr.amount, my_index);*/
         checkLedger(*trans_sent);
-        fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),trans_sent_Index,tr.sender,tr.receiver,tr.timestamp,tr.reward,tr.amount);
+        fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp Sec:%ld  NSec:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),trans_sent_Index,tr.sender,tr.receiver,tr.timestamp.tv_sec,tr.timestamp.tv_nsec,tr.reward,tr.amount);
 
         printf("[USER CHILD #%d] Invio a USER #%d di %d\n",getpid(),tr.receiver,tr.amount);
         if(nanosleep(&time,NULL)== -1){
@@ -203,7 +203,7 @@ int main(int argc, char const *argv[])
     }while(pid_users[user].pid == getpid());/*This way I force sender not to send the transaction to itself*/
     
 
-	tr->timestamp = curr_time.tv_nsec;/*current clock_time*/
+	tr->timestamp = curr_time;/*current clock_time*/
 	tr->sender = getpid();/*PID of the process creating the transaction*/
 	tr->receiver = pid_users[user].pid;/*choosing a random user in the range [0,N_USERS-1]. 12 is the offset(and number of macro) in the shm buffer*/
 	
@@ -222,7 +222,7 @@ void printTransaction( transaction tr){
     printf("[USER CHILD #%d]Sender:%d\n",getpid(),tr.sender);
     printf("[USER CHILD #%d]Receiver:%d\n",getpid(),tr.receiver);
     printf("[USER CHILD #%d]Reward:%d\n",getpid(),tr.reward);
-    printf("[USER CHILD #%d]Timestamp:%ld\n",getpid(),tr.timestamp);
+    printf("[USER CHILD #%d]TimestampSec:%ld  NSec:%ld\n",getpid(),tr.timestamp.tv_sec,tr.timestamp.tv_nsec);
     printf("[USER CHILD #%d]Amount:%d\n",getpid(),tr.amount);
 }
 int getRndNode(){
@@ -311,7 +311,7 @@ int checkLedger(transaction tr){
              if(mastro_area_memoria[i].executed == 1){
             for(j=0;j<SO_BLOCK_SIZE && found ==0;j++){
                 curr_tr = mastro_area_memoria[i].transactions[j]; 
-                if(curr_tr.sender == trans_sent[z].sender && curr_tr.timestamp == trans_sent[z].timestamp){
+                if(curr_tr.sender == trans_sent[z].sender && curr_tr.timestamp.tv_nsec == trans_sent[z].timestamp.tv_nsec && curr_tr.timestamp.tv_sec == trans_sent[z].timestamp.tv_sec){
                     printf("devo rimuovere la transazione\n");
                     found=1;
                 }
@@ -342,7 +342,7 @@ transaction * removeTrans(transaction  tr){
     transaction* tmp;
     /*Finding the index of the transaction to remove and exiting the loop when found*/
     for(i=0;i<trans_sent_Index;i++){
-        if(trans_sent[i].sender == tr.sender && trans_sent[i].timestamp == tr.timestamp ){
+        if(trans_sent[i].sender == tr.sender && trans_sent[i].timestamp.tv_nsec == tr.timestamp.tv_nsec && trans_sent[i].timestamp.tv_sec == tr.timestamp.tv_sec ){
             break;
         }
     }

@@ -1,5 +1,8 @@
 /*
 	Ultime modifiche:
+	-08/01/2022
+		-Timestamp ora comprende anche i secondi
+		
 	-30/12/2021
 		-Aggiunta del campo "executed" alla struct transaction
 		-Aggiunta della struct "transaction_block"
@@ -46,7 +49,7 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
-#define SO_BLOCK_SIZE 
+#define SO_BLOCK_SIZE 3
 #define SO_REGISTRY_SIZE 3
 
 /*Struct used to send/read data from shared memory*/
@@ -58,7 +61,7 @@ int *shm_macro;
 /*Struct used to define a transaction*/
 typedef struct transaction{
 	unsigned int executed;/*whether the transaction has been processed(1) or not(0)*/
-	time_t timestamp;
+	struct timespec timestamp;
 	pid_t sender;
 	pid_t receiver;
 	int amount;

@@ -31,7 +31,7 @@ void printTransaction(struct transaction tr){
     printf("[MASTER PROCESS]Sender:%d\n",tr.sender);
     printf("[MASTER PROCESS]Receiver:%d\n",tr.receiver);
     printf("[MASTER PROCESS]Reward:%d\n",tr.reward);
-    printf("[MASTER PROCESS]Timestamp:%ld\n",tr.timestamp);
+    printf("[MASTER PROCESS]Timestamp Sec:%ld  NSec:%ld\n",tr.timestamp.tv_sec,tr.timestamp.tv_nsec);
     printf("[MASTER PROCESS]Amount:%d\n",tr.amount);
 }
 int dims=0;

@@ -39,7 +39,7 @@ info_process *pid_nodes;
      fprintf(debug_blocco_nodo,"[NODE CHILD #%d] Il seguente blocco è stato scritto sul mastro:\n",getpid());
      for(i=0;i<SO_BLOCK_SIZE;i++){
          tr=nuovoBlocco.transactions[i];
-        fprintf(debug_blocco_nodo,"\n[NODE CHILD #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),i+1,tr.sender,tr.receiver,tr.timestamp,tr.reward,tr.amount);
+        fprintf(debug_blocco_nodo,"\n[NODE CHILD #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp Sec:%ld  Nsec:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),i+1,tr.sender,tr.receiver,tr.timestamp.tv_sec,tr.timestamp.tv_nsec,tr.reward,tr.amount);
 
      }
  }
