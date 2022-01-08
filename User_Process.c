@@ -1,7 +1,13 @@
 /*
 
     TODO: implementare la meccanica del SO_RETRY
+    TODO: COpiare il metodo di emme: il main inizializza un semaforo a 0. ogni processo lo incrementa di 1 con il flag undo. quando muoiono
+          fa l'undo della operazione sul semaforo. 
+          Per la roba prematuramente etc: Numero totale utenti - semval
+
     Ultime modifiche
+     -08/01/2022
+        -Handler per SIGUSR1. Implementanto anceh la roba di abort_trans=1
      -06/01/2022
         -Parziale implementazione della lista di transazioni locali(cache)
         -Parziale implementazione del metodo checkLedger(tr);
@@ -80,6 +86,7 @@ int main(int argc, char const *argv[])
     sa.sa_handler=signalsHandler;
     sigaction(SIGTERM,&sa,NULL);
     sigaction(SIGUSR1,&sa,NULL);
+    sigaction(SIGUSR2,&sa,NULL);
     
     /*retrieving keys sent by master process*/
     info_id=atoi(argv[1]);/*shared memory id to access shared memory with info related to processes*/
@@ -141,7 +148,7 @@ int main(int argc, char const *argv[])
         /*tr = creaTransazione(getBudget(my_index));*/
         if(creaTransazione(&tr,getBudget(my_index)) == -1){
             printf("NOT ENOUGH BUDGET TO SEND A TRANSACTION\n");
-            raise(SIGTERM);
+            retry++;
         }else{
         
         /*printTransaction(tr);*/
@@ -156,9 +163,7 @@ int main(int argc, char const *argv[])
             retry++;
         }else
             retry=0;
-        if(retry == SO_RETRY){
-            raise(SIGTERM);
-        }
+       
 
         /*Updating the local transaction list*/
         trans_sent[trans_sent_Index]= tr;/*Saving the transaction sent locally*/
@@ -175,6 +180,9 @@ int main(int argc, char const *argv[])
             TEST_ERROR
         }
         printf("[USER CHILD #%d] Current Budget:%d\n",getpid(),getBudget(my_index));
+        }
+         if(retry == SO_RETRY){
+            raise(SIGUSR1);
         }
     }
 
@@ -311,7 +319,7 @@ int checkLedger(transaction tr){
              if(mastro_area_memoria[i].executed == 1){
             for(j=0;j<SO_BLOCK_SIZE && found ==0;j++){
                 curr_tr = mastro_area_memoria[i].transactions[j]; 
-                if(curr_tr.sender == trans_sent[z].sender && curr_tr.timestamp.tv_nsec == trans_sent[z].timestamp.tv_nsec && curr_tr.timestamp.tv_sec == trans_sent[z].timestamp.tv_sec){
+                if(curr_tr.sender == trans_sent[z].sender && curr_tr.timestamp.tv_nsec == trans_sent[z].timestamp.tv_nsec && curr_tr.timestamp.tv_sec == trans_sent[z].timestamp.tv_sec && curr_tr.receiver == trans_sent[z].receiver){
                     printf("devo rimuovere la transazione\n");
                     found=1;
                 }
@@ -360,9 +368,18 @@ transaction * removeTrans(transaction  tr){
 }
 
 void signalsHandler(int signal) {
+    switch(signal){
+        case SIGUSR1:
+        shm_info[my_index].abort_trans=1;
+        shm_info[my_index].alive=0;
+            break;
+        case SIGTERM:
+        shm_info[my_index].abort_trans=0;
+        shm_info[my_index].alive=0;
+            break;
+    }
     shmdt(shm_macro);
     shmdt(shm_info);
-    
     printf("<<user>> %d ha pulito tutto :) \n", getpid());
     exit(EXIT_SUCCESS);
 }

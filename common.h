@@ -70,6 +70,7 @@ typedef struct transaction{
 
 /*Struct used to define a single transaction block to be then processed*/
 typedef struct transaction_block{
+	unsigned int id;/*progressive identifier of the block*/
 	unsigned int executed;
 	transaction transactions[SO_BLOCK_SIZE];
 } transaction_block;
@@ -80,6 +81,7 @@ typedef struct transaction_block{
 
 /*Struct used to store info related to children processes(users and nodes)*/
 typedef struct info_process{
+	int alive;/*whether the process is alive or not  0:dead  1:alive*/
 	int budget;
 	pid_t pid;
 	/*TODO: flexata di collassare il tipo in abort_trans. 24 bit significativi per abort, i restanti per il tibo*/

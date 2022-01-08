@@ -2,6 +2,8 @@
    
 	Ultime modifiche:
 
+    -08/01/2022
+        -Indice al blocco
     -05/01/2022
         -Ora esegue correttamente il detach dalle shared memories
         -Cambiato il modo in cui veniva generato il tempo randomico. Prima poteva dare overflow
@@ -212,6 +214,7 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
         sops.sem_flg=0;
         semop(semaforo_id,&sops,1); /*seize the resource, now it can write on the mastro*/
         mastro_area_memoria[i] = nuovoBlocco;
+        mastro_area_memoria[i].id=i;
         mastro_area_memoria[i].executed=1;
         mastro_area_memoria[i+1].executed=0; 
 
