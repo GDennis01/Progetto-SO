@@ -89,11 +89,12 @@ info_process *pid_nodes;
 
     
     msgq_id=msgget(getpid(),IPC_CREAT | 0666);
+    /*16384 is the max default size of message queue*/
     if(sizeof(transaction)*SO_TP_SIZE < 16384){ 
-    msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
-    msg_ds.msg_perm.mode=438;
-    msgctl(msgq_id,IPC_SET,&msg_ds);/*Setting the size of the message queue equal to SO_TP_SIZE*/
-    TEST_ERROR
+        msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
+        msg_ds.msg_perm.mode=438;
+        msgctl(msgq_id,IPC_SET,&msg_ds);/*Setting the size of the message queue equal to SO_TP_SIZE*/
+        TEST_ERROR
     }
 
   
@@ -218,8 +219,8 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
         mastro_area_memoria[i].executed=1;
         mastro_area_memoria[i+1].executed=0; 
 
-        printf("Io, Nodo #%d, ho scritto nella %d° posizione del libro mastro:\n",getpid(),i+1);
-        printblocco(nuovoBlocco);
+        /*printf("Io, Nodo #%d, ho scritto nella %d° posizione del libro mastro:\n",getpid(),i+1);*/
+       /* printblocco(nuovoBlocco);*/
         /* restituzione del semaforo*/
         sops.sem_num=2;
         sops.sem_op=1;

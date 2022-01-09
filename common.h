@@ -9,10 +9,9 @@
 		-Aggiunta della variabile legata al libro mastro
 		-Aggiunta del prototipo della funzione "creaTransazione"
 */
-
-#define _GNU_SOURCE 
-#include <stdio.h>
+#define _GNU_SOURCE  /* Per poter compilare con -std=c89 -pedantic */
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -49,8 +48,8 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
-#define SO_BLOCK_SIZE 10
-#define SO_REGISTRY_SIZE 35
+#define SO_BLOCK_SIZE 5
+#define SO_REGISTRY_SIZE 5
 
 
 /*Shared variable used to store macros*/

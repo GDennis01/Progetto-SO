@@ -34,17 +34,25 @@ void printTransaction(struct transaction tr){
     printf("[MASTER PROCESS]Timestamp Sec:%ld  NSec:%ld\n",tr.timestamp.tv_sec,tr.timestamp.tv_nsec);
     printf("[MASTER PROCESS]Amount:%d\n",tr.amount);
 }
+void printfInfo(){
+    return;
+}
 int dims=0;
-int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
-
+int info_key,macro_key,sem_key,mastro_key;
+int usersAbortedPrem=0;
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
     int  i,j,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
-    char str[15],str2[15],str3[15],str4[15];/*Stringified key for shm*/
-    char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
+    char str[15],str2[15],str3[15],str4[15];/*Stringified keys for shm*/
+    char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default,last NULL*/
     struct sembuf sops;
+    struct timespec eachSec;
+    int semValue;
+
+    eachSec.tv_sec=1;
+    eachSec.tv_nsec=0;
 
     bzero(&sa,sizeof(sa));
     sa.sa_handler=signalsHandler;
@@ -78,10 +86,9 @@ int main(int argc, char const *argv[])
         TEST_ERROR
         exit(1);
     }
-    
+    /*Initializing the first area of the shared memory of the ledger*/
     mastro_area_memoria[0].executed=0;
     
-
     TEST_ERROR
     printf("[PARENT #%d] ID della SHM_INFO:%d     ID del SEM:%d\n",getpid(),info_key,sem_key);
     
@@ -97,19 +104,17 @@ int main(int argc, char const *argv[])
     sprintf(str4,"%d",mastro_key);/*I convert the key from int to string*/
     arguments[4]=str4;
 
-  
-    
-    /*Writing Macros to shared memory.
-    The first 12 locations of the arrays are reserved for the macros,others will be used
-    to store pids and statuses of user/node processes*/
-    
+    /*Writing Macros to shared memory*/
     for(i=0;i<N_MACRO;i++){
         shm_macro[i]=macros[i];
     }
 
-    semctl(sem_key,1,SETVAL,N_NODES);/*Semaphore used to allow nodes to finish creating their queues*/
+    /*Semaphores initialization*/
     semctl(sem_key,0,SETVAL,N_USERS+N_NODES);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
+    semctl(sem_key,1,SETVAL,N_NODES);/*Semaphore used to allow nodes to finish creating their queues*/
     semctl(sem_key,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
+
+    /*Triggering the countdown of the simulation*/
     alarm(SO_SIM_SEC);
 
     for(i=0;i<N_USERS;i++){
@@ -172,8 +177,16 @@ int main(int argc, char const *argv[])
         }
     }
     /*Waiting for all children to DIE*/
-    while(child_pid=wait(&status) != -1){
-        printf("Finished waiting process %d with status %d\n",child_pid,WEXITSTATUS(status));
+    while(/*child_pid=wait(&status) != -1*/ 1 ){
+        nanosleep(&eachSec,NULL);
+        printInfo();
+        /*If semctl returns 0, it means every users process  have died*/
+        /*if(semValue=semctl(sem_key,3,GETVAL) == 0 ){
+            terminazione(3,dims);
+        }else{
+            usersAbortedPrem=N_USERS-semValue;
+        }*/
+        /*printf("Finished waiting process %d with status %d\n",child_pid,WEXITSTATUS(status));*/
     }
     printf("[PARENT] ABOUT TO ABORT\n");
     
@@ -186,7 +199,7 @@ void terminazione(int reason,int dim){
     clock_gettime(CLOCK_REALTIME,&curr_time);
     printf("TIMESTAMP STAMPA:sec:%ld nsec:%ld\n",curr_time.tv_sec,curr_time.tv_nsec);
     printf("-----------------------------------------------\n");
-    printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
+    printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":reason ==3?"Tutti gli utenti son morti":"Motivo della terminazione ignoto. Errore");
     for(i=0;i<dim/sizeof(info_process);i++){
         kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
         waitpid(shm_info[i].pid,NULL,0);
@@ -234,8 +247,30 @@ void terminazione(int reason,int dim){
 
     }
     deleteIPCs(info_key,macro_key,sem_key,mastro_key);
+    exit(EXIT_SUCCESS);
 }
 
+/*
+    FIXME:fixare il bug dove se non c'è un \n alla fine crasha
+*/
+void read_macros(int fd,int * macros){
+    int j=0,i,tmp;
+    char c;
+    char *string=malloc(13);/*Macros' parameter cant have more than 13 digits*/
+    while(read(fd,&c,1) != 0){
+        if(c == ':'){ 
+            read(fd,&c,1);
+            for( i=0;c>=48 && c<=57;i++){
+                *(string+i)=c;
+                read(fd,&c,1);
+            }
+            tmp = atoi(string);
+            bzero(string,13);/*Erasing the temporary string since it may cause data inconsistency*/
+            macros[j]=tmp;
+            j++;
+        }
+    }
+}
 
 void signalsHandler(int signal) {
     switch(signal){

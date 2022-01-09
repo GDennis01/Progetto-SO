@@ -4,36 +4,17 @@
     TODO: COpiare il metodo di emme: il main inizializza un semaforo a 0. ogni processo lo incrementa di 1 con il flag undo. quando muoiono
           fa l'undo della operazione sul semaforo. 
           Per la roba prematuramente etc: Numero totale utenti - semval
+          Per controllare se tutti i processi son tutti morti basta controllare se il semval è a 0
 
     Ultime modifiche
+     -09/01/2022
+        -Ora il processo genera una transazione(correttamente, si spera) alla ricezione di SIGINT
      -08/01/2022
         -Handler per SIGUSR1. Implementanto anceh la roba di abort_trans=1
      -06/01/2022
         -Parziale implementazione della lista di transazioni locali(cache)
         -Parziale implementazione del metodo checkLedger(tr);
         -Aggiunta di una fprintf per stampare la cache in un file (cache.txt) per il debug
-
-     -05/01/2022
-        -Fixato l'errore "Invalid Argument". 
-         Risiedeva nella generazione di un tempo randomico. A volte andava in overflow e quindi la nanosleep dava errore
-        -Aggiornato il metodo "creaTransazione()", ora restituisce un intero(0 se è andato a buon fine, 1 altrimenti)
-
-     -04/01/2022
-        -Modificato il metodo "updateInfos()"
-        -Aggiunto il metodo "getBudget()"
-        -Cambiata la gestione di invio delle proprie info, ora si usa solo la shm
-        
-     
-     -03/01/2022
-        -Ora ci sono solo tre key: info,macro e sem
-        -Le macro vora engono salvate in *shm_macro, le info dei processi in *info
-        -alarmHandler -> signalsHandler
-        -Aggiunto mastro_key/id e la sua relativa shared memory
-        -Implementato il ciclo(while(1))
-        
-
-    -30/12/2021
-        -Aggiunta "tr.executed=1" alla fine di creazione di una transazione
 */
 #include "User_Process.h"
 
@@ -88,13 +69,13 @@ int main(int argc, char const *argv[])
     sa.sa_handler=signalsHandler;
     sigaction(SIGTERM,&sa,NULL);
     sigaction(SIGUSR1,&sa,NULL);
-    sigaction(SIGINT,&sa,NULL);
+    sigaction(SIGUSR2,&sa,NULL);
     
     /*retrieving keys sent by master process*/
     info_id=atoi(argv[1]);/*shared memory id to access shared memory with info related to processes*/
     macro_id=atoi(argv[2]);/*shared memory id to access shared memory with macros*/
     sem_id=atoi(argv[3]);/*id of semaphore*/
-    mastro_id=atoi(argv[4]);
+    mastro_id=atoi(argv[4]);/*id of mastro*/
     
     /*Attaching to shared memories*/
     shm_macro=(int*)shmat(macro_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
@@ -129,6 +110,14 @@ int main(int argc, char const *argv[])
         /*printf("[USER CHILD #%d] Leggo Nodo #%d \n",getpid(),pid_nodes[i].pid);  */
     }
 
+    /*Incrementing by 1 the value of the fourth sem. When the user terminate, the flag undo
+    makes so that the increment rollbacks to the previous state*/
+    /*sops.sem_num=3;
+    sops.sem_op=1;
+    sops.sem_flg=SEM_UNDO;
+    semop(sem_id,&sops,1);*/
+
+    /*TODO:Rimuovere correttamente questa funzione. E' inutile. CheckLedger fa già tutto ma meglio*/
     updateInfos(SO_BUDGET_INIT, 0, my_index);
 
      /*The semaphore is used to wait for nodes to finish creating their queues*/
@@ -149,7 +138,7 @@ int main(int argc, char const *argv[])
         /*By putting in AND the "stopped == 0 || stopped == -1" condition, it tries to create a transaction only if it hasnt been created before
           (i.e. by receiving a SIGINT and creating a transation in the SIGINT handler portion of code) or if it has failed to create one(in the SIGINT handler)*/
         if((stopped == 0 || stopped == -1) && creaTransazione(&tr,getBudget(my_index)) == -1){
-            printf("NOT ENOUGH BUDGET TO SEND A TRANSACTION\n");
+            printf("#%d  NOT ENOUGH BUDGET TO SEND A TRANSACTION\n",getpid());
             retry++;
         }else{
         stopped=0;/*resetting the stopped flag*/
@@ -238,20 +227,12 @@ int getRndNode(){
 	return rand()%N_NODES;
 }
 
- 
-
-
-
-
 void updateInfos(int budget,int abort_trans,int my_index){
     shm_info[my_index].pid=getpid();
     shm_info[my_index].type=0;
     shm_info[my_index].budget=budget;
     shm_info[my_index].abort_trans=abort_trans;
 }
-/*FIXME: fixare handle_signal(errori sintattici etc)
-   */
-
 
 int checkLedger(transaction tr){
     /*Method that checks the whole ledger and match if the transaction sent by the user is written in it.
@@ -270,8 +251,6 @@ int checkLedger(transaction tr){
          se non è così, decrementa il budget di amount+reward
 
         -Rilascio del lock sul libro mastro
-
-        FIXME: Budget negativo, calcolo sbagliato
 */
     int i=0,j=0,z=0;
     int found=0;/*0 : found   1: not found*/
@@ -355,7 +334,7 @@ void signalsHandler(int signal) {
         shm_info[my_index].alive=0;
         shmdt(shm_macro);
         shmdt(shm_info);
-        printf("<<user>> %d ha pulito tutto :) \n", getpid());
+        printf("<<user>> %d ha pulito tutto :) SIGUSR1 \n", getpid());
         exit(EXIT_SUCCESS);
             break;
         /*SIGTERM is sent to the user when the simulation is ending*/
@@ -364,12 +343,11 @@ void signalsHandler(int signal) {
         shm_info[my_index].alive=0;
         shmdt(shm_macro);
         shmdt(shm_info);
-        printf("<<user>> %d ha pulito tutto :) \n", getpid());
+        printf("<<user>> %d ha pulito tutto :) SIGTERM\n", getpid());
         exit(EXIT_SUCCESS);
             break;
-            /*TODO: Implementare la transazione nel main di user*/
         /*SIGINT is sent to the user by another process(or even from the bash, which is still a process lol)*/
-        case SIGINT:
+        case SIGUSR2:
             printf("HO RICEVUTO UN SIGINT, PROCEDO A CREARE UNA TRANSAZIONE @@@@@@@@@@@@@@@@@@@@\n");
             if(creaTransazione(&tr,getBudget(my_index)) == -1){
                 stopped=-1;
