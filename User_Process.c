@@ -1,6 +1,6 @@
 /*
 
-    TODO: implementare la meccanica del SO_RETRY
+    
     TODO: COpiare il metodo di emme: il main inizializza un semaforo a 0. ogni processo lo incrementa di 1 con il flag undo. quando muoiono
           fa l'undo della operazione sul semaforo. 
           Per la roba prematuramente etc: Numero totale utenti - semval
@@ -54,6 +54,8 @@ struct sembuf sops;/*variable used to perform actions on semaphores*/
 int sem_id;
 int my_index=0;
 int retry=0;
+int stopped=0;
+ transaction tr;/*transction to be sent*/
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
@@ -69,7 +71,7 @@ int main(int argc, char const *argv[])
     
 
     pid_t pid;
-    transaction tr;/*transction to be sent*/
+   
     transaction * tr_block,*tr_pool;
     msgqbuf msg_buf;/*Buffer used to send transaction*/
     
@@ -86,7 +88,7 @@ int main(int argc, char const *argv[])
     sa.sa_handler=signalsHandler;
     sigaction(SIGTERM,&sa,NULL);
     sigaction(SIGUSR1,&sa,NULL);
-    sigaction(SIGUSR2,&sa,NULL);
+    sigaction(SIGINT,&sa,NULL);
     
     /*retrieving keys sent by master process*/
     info_id=atoi(argv[1]);/*shared memory id to access shared memory with info related to processes*/
@@ -139,19 +141,20 @@ int main(int argc, char const *argv[])
 
     TEST_ERROR
     while(1){
-        
-        /*time.tv_nsec=(rand()+MIN_TRANS_GEN_NSEC)%(MAX_TRANS_GEN_NSEC+1); THIS METHOD RESULTED SOMETIMES IN OVERFLOW*/
+    
         time.tv_nsec=rand()%(MAX_TRANS_GEN_NSEC+1-MIN_TRANS_GEN_NSEC) +MIN_TRANS_GEN_NSEC;/*[MIN_TRANS_GEN,MAX_TRANS_GEN]*/
-        time.tv_sec=1;/*1 for debug mode xd*/
+        time.tv_sec=1;/*1 for easier debug*/
         
         /*Creating a new transaction*/
-        /*tr = creaTransazione(getBudget(my_index));*/
-        if(creaTransazione(&tr,getBudget(my_index)) == -1){
+        /*By putting in AND the "stopped == 0 || stopped == -1" condition, it tries to create a transaction only if it hasnt been created before
+          (i.e. by receiving a SIGINT and creating a transation in the SIGINT handler portion of code) or if it has failed to create one(in the SIGINT handler)*/
+        if((stopped == 0 || stopped == -1) && creaTransazione(&tr,getBudget(my_index)) == -1){
             printf("NOT ENOUGH BUDGET TO SEND A TRANSACTION\n");
             retry++;
         }else{
-        
+        stopped=0;/*resetting the stopped flag*/
         /*printTransaction(tr);*/
+
         /*Sending the transaction to a random selected node.*/
         pid=getRndNode();
         msg_buf.mtype=pid_nodes[pid].pid;/*That way, only the selected node can read the message with type set to its pid*/
@@ -170,8 +173,7 @@ int main(int argc, char const *argv[])
         trans_sent_Index=trans_sent_Index+1;/*Incrementing by 1 the index*/
         trans_sent=realloc(trans_sent,sizeof(transaction)*(trans_sent_Index+1));/*Incrementing by 1 unit(transaction) the size of the list*/
         
-        printf("[USER CHILD #%d] Trans con amount %d inviata al nodo %d",getpid(),tr.amount,pid);
-        /*updateBudget(tr.amount, my_index);*/
+        printf("[USER CHILD #%d] Trans con amount %d inviata al nodo %d\n",getpid(),tr.amount,pid);
         checkLedger(*trans_sent);
         fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp Sec:%ld  NSec:%ld\n\tReward:%d\n\tAmount:%d\n",getpid(),trans_sent_Index,tr.sender,tr.receiver,tr.timestamp.tv_sec,tr.timestamp.tv_nsec,tr.reward,tr.amount);
 
@@ -186,7 +188,6 @@ int main(int argc, char const *argv[])
         }
     }
 
-    shmdt(shm_buf);
     printf("[USER CHILD #%d] ABOUT TO ABORT\n",getpid());
 
     
@@ -238,27 +239,9 @@ int getRndNode(){
 }
 
  
-/*TODO: il budget và calcolato controllando il libro mastro
-  TODO: usare semafori per scrivere il budget  */
-void updateBudget(int costoTransazione,  int my_index){
-    int i=0,j=0;
-    int budget=SO_BUDGET_INIT;
-    int amount;
-    transaction tmp;
 
-    /*Subtracting the money of the transaction sent BUT NOT yet written in the ledger */
-    for(i=0;i<trans_sent_Index;i++){
-       tmp=trans_sent[i];
-      /* if(checkLedger(trans_sent[i]) == 0){
-           budget=budget - tmp.amount;
-       }*/
-       budget=budget-tmp.amount;
-    }
-    TEST_ERROR
-    shm_info[my_index].budget = shm_info[my_index].budget - costoTransazione;
-     
-    
-}
+
+
 
 void updateInfos(int budget,int abort_trans,int my_index){
     shm_info[my_index].pid=getpid();
@@ -267,11 +250,12 @@ void updateInfos(int budget,int abort_trans,int my_index){
     shm_info[my_index].abort_trans=abort_trans;
 }
 /*FIXME: fixare handle_signal(errori sintattici etc)
-  TODO: switch case con i vari segnali. se termina prematuramente(SO_RETRY ad esempio), impostare abort_trans a 1 */
+   */
 
 
 int checkLedger(transaction tr){
-    /*Method that checks the whole ledger and match if the transaction sent by the user is written in it
+    /*Method that checks the whole ledger and match if the transaction sent by the user is written in it.
+    It update the balance accordingly to the ledger
     Cosa deve fare esattamente:
         -Lock sul libro mastro per evitare inconsistenza dei dati
         
@@ -298,7 +282,6 @@ int checkLedger(transaction tr){
     sops.sem_op=-1;
     sops.sem_flg=0;
     semop(sem_id,&sops,1);
-    printf("#%d Parto con Budget:%d\n",getpid(),budget);
     for(i=0;i<SO_REGISTRY_SIZE;i++){
         if(mastro_area_memoria[i].executed == 1){
             for(j=0;j<SO_BLOCK_SIZE;j++){
@@ -307,20 +290,18 @@ int checkLedger(transaction tr){
                     budget=budget- curr_tr.amount-curr_tr.reward;
                 else if(curr_tr.receiver == getpid())
                     budget=budget+ curr_tr.amount;
-                printf("#%d Budget aggiornato:%d\n",getpid(),budget);
         }
         }
     }
    
     for(z=0;z<trans_sent_Index;z++){
-        printf("User #%d\n",getpid());
-        printTransaction(trans_sent[z]);
+        /*printTransaction(trans_sent[z]);*/
          for(i=0;i<SO_REGISTRY_SIZE && found == 0;i++){
              if(mastro_area_memoria[i].executed == 1){
             for(j=0;j<SO_BLOCK_SIZE && found ==0;j++){
                 curr_tr = mastro_area_memoria[i].transactions[j]; 
                 if(curr_tr.sender == trans_sent[z].sender && curr_tr.timestamp.tv_nsec == trans_sent[z].timestamp.tv_nsec && curr_tr.timestamp.tv_sec == trans_sent[z].timestamp.tv_sec && curr_tr.receiver == trans_sent[z].receiver){
-                    printf("devo rimuovere la transazione\n");
+                    /*printf("devo rimuovere la transazione\n");*/
                     found=1;
                 }
             }
@@ -334,7 +315,6 @@ int checkLedger(transaction tr){
     }
      
     shm_info[my_index].budget=budget;
-    printf("Sto per aggiornare il budget del mio pid:%d   budget:%d\n",shm_info[my_index].pid,budget);
 
 
     sops.sem_num=2;
@@ -369,17 +349,32 @@ transaction * removeTrans(transaction  tr){
 
 void signalsHandler(int signal) {
     switch(signal){
+        /*SIGUSR1 is sent to the user if it aborted prematurely*/
         case SIGUSR1:
         shm_info[my_index].abort_trans=1;
         shm_info[my_index].alive=0;
+        shmdt(shm_macro);
+        shmdt(shm_info);
+        printf("<<user>> %d ha pulito tutto :) \n", getpid());
+        exit(EXIT_SUCCESS);
             break;
+        /*SIGTERM is sent to the user when the simulation is ending*/
         case SIGTERM:
         shm_info[my_index].abort_trans=0;
         shm_info[my_index].alive=0;
+        shmdt(shm_macro);
+        shmdt(shm_info);
+        printf("<<user>> %d ha pulito tutto :) \n", getpid());
+        exit(EXIT_SUCCESS);
             break;
+            /*TODO: Implementare la transazione nel main di user*/
+        /*SIGINT is sent to the user by another process(or even from the bash, which is still a process lol)*/
+        case SIGINT:
+            printf("HO RICEVUTO UN SIGINT, PROCEDO A CREARE UNA TRANSAZIONE @@@@@@@@@@@@@@@@@@@@\n");
+            if(creaTransazione(&tr,getBudget(my_index)) == -1){
+                stopped=-1;
+            } else stopped=1;
+        break;
     }
-    shmdt(shm_macro);
-    shmdt(shm_info);
-    printf("<<user>> %d ha pulito tutto :) \n", getpid());
-    exit(EXIT_SUCCESS);
+    
 }

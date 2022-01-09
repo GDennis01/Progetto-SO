@@ -161,7 +161,7 @@ info_process *pid_nodes;
     /*printf("[NODE CHILD #%d] LETTI %d BYTES\n",getpid(),bytes_read);*/
     }
 
-    /*shmdt(&shm_buf);
+    /*
     msgctl(msgq_id,IPC_RMID,NULL);*/
     printf("[NODE CHILD] ABOUT TO ABORT\n");
 

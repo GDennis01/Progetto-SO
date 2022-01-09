@@ -133,7 +133,6 @@ int main(int argc, char const *argv[])
                 shm_info[i].type=0;
                 shm_info[i].budget=SO_BUDGET_INIT;
                 
-                /*printf("[PARENT #%d] USER CHILD appena creato ha pid %d\n",getpid(),shm_buf[N_MACRO+i].pid);*/
                 sops.sem_num=0;
                 sops.sem_op=-1;
                 sops.sem_flg=0;
@@ -164,7 +163,6 @@ int main(int argc, char const *argv[])
             shm_info[N_USERS+i].pid=child_pid;
             shm_info[N_USERS+i].type=1;
 
-            /*printf("[PARENT #%d] NODE CHILD appena creato ha pid %d\n",getpid(),shm_buf[N_MACRO+N_USERS+i].pid);*/
             
             sops.sem_num=0;
             sops.sem_op=-1;

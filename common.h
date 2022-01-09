@@ -49,11 +49,9 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
-#define SO_BLOCK_SIZE 3
-#define SO_REGISTRY_SIZE 3
+#define SO_BLOCK_SIZE 10
+#define SO_REGISTRY_SIZE 35
 
-/*Struct used to send/read data from shared memory*/
-struct child *shm_buf;
 
 /*Shared variable used to store macros*/
 int *shm_macro;
