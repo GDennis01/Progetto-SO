@@ -37,6 +37,9 @@ void printTransaction(struct transaction tr){
 void printfInfo(){
     return;
 }
+int compareBudget(const void * a, const void * b){
+    return (int)(((budgetSortedArray *)a)->budget)-(int)(((budgetSortedArray *)a)->budget);
+}
 int dims=0;
 int info_key,macro_key,sem_key,mastro_key;
 int usersAbortedPrem=0;
