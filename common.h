@@ -105,6 +105,10 @@ typedef struct child {
 	unsigned int status; /* 0 se morto, 1 se vivo*/
 } child;
 
+typedef struct budgetSortedArray {
+    int index; /*indice nell'array info_process del processo */
+    int budget; /* budget del suddetto processo*/
+} budgetSortedArray;
 /*Function used to read macros from "macros.txt". They are then saved in the then defined variable macros*/
 void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/

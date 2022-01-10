@@ -1,4 +1,10 @@
 /*
+
+    
+    TODO: COpiare il metodo di emme: il main inizializza un semaforo a 0. ogni processo lo incrementa di 1 con il flag undo. quando muoiono
+          fa l'undo della operazione sul semaforo. 
+          Per la roba prematuramente etc: Numero totale utenti - semval
+
     Ultime modifiche
      -10/01/2022
         -Eliminazione di updateInfos, l'inizializzazione viene fatta nel master e l'update da checkLedger

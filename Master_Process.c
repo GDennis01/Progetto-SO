@@ -1,4 +1,5 @@
 #include "common.c"
+#define MAX_PRINTABLE_PROCESSES 10
  /* Per poter compilare con -std=c89 -pedantic */
 /*
 GESTIONE NODI:
@@ -34,28 +35,30 @@ void printTransaction(struct transaction tr){
     printf("[MASTER PROCESS]Timestamp Sec:%ld  NSec:%ld\n",tr.timestamp.tv_sec,tr.timestamp.tv_nsec);
     printf("[MASTER PROCESS]Amount:%d\n",tr.amount);
 }
-void printfInfo(){
-    return;
-}
-int compareBudget(const void * a, const void * b){
-    return (int)(((budgetSortedArray *)a)->budget)-(int)(((budgetSortedArray *)a)->budget);
-}
 int dims=0;
-int info_key,macro_key,sem_key,mastro_key;
-int usersAbortedPrem=0;
+int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
+
+int compareBudget(const void * a, const void * b){
+    int aa = (int)(((budgetSortedArray *)a)->budget);
+    int bb = (int)(((budgetSortedArray *)b)->budget);
+    return aa-bb;
+}
+
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
     int  i,j,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
-    char str[15],str2[15],str3[15],str4[15];/*Stringified keys for shm*/
-    char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default,last NULL*/
+    char str[15],str2[15],str3[15],str4[15];/*Stringified key for shm*/
+    char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
-    struct timespec eachSec;
-    int semValue;
+    int activeProcess= 0;
+    budgetSortedArray *budgetArray;
+    budgetSortedArray *budgetArrayNO;
 
-    eachSec.tv_sec=1;
-    eachSec.tv_nsec=0;
+    struct timespec time;
+    time.tv_sec=1;
+    time.tv_nsec=0;
 
     bzero(&sa,sizeof(sa));
     sa.sa_handler=signalsHandler;
@@ -65,6 +68,8 @@ int main(int argc, char const *argv[])
     read_macros(fd,macros);/*I read macros from file*/
     close(fd);/*I close the fd used to read macross*/
 
+    budgetArray = (budgetSortedArray *)malloc(sizeof(budgetSortedArray)*N_USERS);
+    budgetArrayNO = (budgetSortedArray *)malloc(sizeof(budgetSortedArray)*N_NODES);
     dims=sizeof(info_process)*(N_USERS+N_NODES);
 
     initIPCS(&info_key,&macro_key,&sem_key,&mastro_key, dims);
@@ -183,16 +188,57 @@ int main(int argc, char const *argv[])
         }
     }
     /*Waiting for all children to DIE*/
-    while(/*child_pid=wait(&status) != -1*/ 1 ){
-        nanosleep(&eachSec,NULL);
-      
-        /*If semctl returns 0, it means every users process  have died*/
-        /*if(semValue=semctl(sem_key,3,GETVAL) == 0 ){
-            terminazione(3,dims);
+    while(1){
+        nanosleep(&time,NULL);  /*1 sec */
+        printf("-----STAMPAUSERS-----\n");
+        /*calcolo child attivi */
+        for(i=0;i<N_USERS;i++){
+            if(shm_info[i].alive==1){
+                budgetArray[activeProcess].budget = shm_info[i].budget;
+                budgetArray[activeProcess].index = i;
+                activeProcess++;
+            }
+        }
+        printf("Utenti ancora attivi: %d / %d \n",activeProcess,N_USERS);
+        budgetArray = realloc(budgetArray, sizeof(budgetSortedArray)*activeProcess);
+        if(activeProcess == 0){
+            terminazione(2, dims);  /*all dead we close this shit*/
+        }else if(activeProcess > MAX_PRINTABLE_PROCESSES){   /*if child > x -> stampa solo di quelli con più budget e quelli con meno budget */
+            qsort(budgetArray, activeProcess, sizeof(budgetSortedArray), compareBudget);
+            for(i=0; i<MAX_PRINTABLE_PROCESSES/2; i++){
+                printf("[User Process #%d]\nBilancio:%d\n",shm_info[budgetArray[activeProcess-i].index].pid, budgetArray[activeProcess-i].budget);
+            }
+            printf("...\n");
+            for(i=MAX_PRINTABLE_PROCESSES/2; i>=0; i--){
+                printf("[User Process #%d]\nBilancio:%d\n",shm_info[budgetArray[i].index].pid,budgetArray[i].budget);
+            }
         }else{
-            usersAbortedPrem=N_USERS-semValue;
-        }*/
-        /*printf("Finished waiting process %d with status %d\n",child_pid,WEXITSTATUS(status));*/
+            for(i=0;i<activeProcess;i++){
+                printf("[User Process #%d]\nBilancio:%d\n",shm_info[budgetArray[i].index].pid,budgetArray[i].budget);
+            }
+        }
+        printf("-----STAMPANODI-----\n");
+
+        for(i=N_USERS;i<N_USERS+N_NODES;i++){
+            budgetArrayNO[i-N_USERS].budget = shm_info[i].budget;
+            budgetArrayNO[i-N_USERS].index = i;
+        }
+        if(N_NODES>MAX_PRINTABLE_PROCESSES){
+            qsort(budgetArrayNO, N_NODES, sizeof(budgetSortedArray), compareBudget);
+            for(i=0; i<MAX_PRINTABLE_PROCESSES/2; i++){
+                printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[N_NODES-i].index].pid, budgetArrayNO[N_NODES-i].budget);
+            }
+            printf("...\n");
+            for(i=MAX_PRINTABLE_PROCESSES/2; i>=0; i--){
+                printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[i].index].pid,budgetArrayNO[i].budget);
+            }
+        }else{
+            for(i=N_USERS;i<N_USERS+N_NODES;i++){
+                printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[i-N_USERS].index].pid,budgetArrayNO[i-N_USERS].budget);
+            }
+        }
+        
+        activeProcess=0;
     }
     printf("[PARENT] ABOUT TO ABORT\n");
     
@@ -205,7 +251,7 @@ void terminazione(int reason,int dim){
     clock_gettime(CLOCK_REALTIME,&curr_time);
     printf("TIMESTAMP STAMPA:sec:%ld nsec:%ld\n",curr_time.tv_sec,curr_time.tv_nsec);
     printf("-----------------------------------------------\n");
-    printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":reason ==3?"Tutti gli utenti son morti":"Motivo della terminazione ignoto. Errore");
+    printf("Il motivo della terminazione è: %s \n",reason==0?"E' scaduto il tempo della simulazione":reason ==1?"La capacità del libro mastro si è esaurita":reason ==2?"Tutti i processi utenti sono terminati":"Motivo della terminazione ignoto. Errore");
     for(i=0;i<dim/sizeof(info_process);i++){
         kill( shm_info[i].pid , SIGTERM ); /*Killing every children*/
         waitpid(shm_info[i].pid,NULL,0);

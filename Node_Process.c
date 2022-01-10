@@ -100,7 +100,7 @@ info_process *pid_nodes;
 
   
 
-    printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);
+    /*printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);*/
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
     sops.sem_num=1;
     sops.sem_op=-1;
