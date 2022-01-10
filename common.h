@@ -1,5 +1,8 @@
 /*
 	Ultime modifiche:
+	-08/01/2022
+		-Timestamp ora comprende anche i secondi
+		
 	-30/12/2021
 		-Aggiunta del campo "executed" alla struct transaction
 		-Aggiunta della struct "transaction_block"
@@ -37,7 +40,7 @@
 #define N_USERS macros[0]
 #define N_NODES macros[1]
 #define MIN_TRANS_GEN_NSEC macros[2]
-#define MAX_TRANS_GEN_NSEC macros[3]
+#define MAX_TRANS_GEN_NSEC macros[3] 
 #define MIN_TRANS_PROC_NSEC macros[4]
 #define MAX_TRANS_PROC_NSEC macros[5]
 #define SO_BUDGET_INIT macros[6]
@@ -46,11 +49,9 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
-#define SO_BLOCK_SIZE 20
-#define SO_REGISTRY_SIZE 11
+#define SO_BLOCK_SIZE 10
+#define SO_REGISTRY_SIZE 35
 
-/*Struct used to send/read data from shared memory*/
-struct child *shm_buf;
 
 /*Shared variable used to store macros*/
 int *shm_macro;
@@ -58,7 +59,7 @@ int *shm_macro;
 /*Struct used to define a transaction*/
 typedef struct transaction{
 	unsigned int executed;/*whether the transaction has been processed(1) or not(0)*/
-	time_t timestamp;
+	struct timespec timestamp;
 	pid_t sender;
 	pid_t receiver;
 	int amount;
@@ -67,6 +68,7 @@ typedef struct transaction{
 
 /*Struct used to define a single transaction block to be then processed*/
 typedef struct transaction_block{
+	unsigned int id;/*progressive identifier of the block*/
 	unsigned int executed;
 	transaction transactions[SO_BLOCK_SIZE];
 } transaction_block;
@@ -77,6 +79,7 @@ typedef struct transaction_block{
 
 /*Struct used to store info related to children processes(users and nodes)*/
 typedef struct info_process{
+	int alive;/*whether the process is alive or not  0:dead  1:alive*/
 	int budget;
 	pid_t pid;
 	/*TODO: flexata di collassare il tipo in abort_trans. 24 bit significativi per abort, i restanti per il tibo*/
@@ -103,12 +106,19 @@ typedef struct child {
 	unsigned int status; /* 0 se morto, 1 se vivo*/
 } child;
 
+typedef struct budgetSortedArray {
+	int index; /*indice nell'array info_process del processo */
+	int budget; /* budget del suddetto processo*/
+} budgetSortedArray;
+
 /*Function used to read macros from "macros.txt". They are then saved in the then defined variable macros*/
 void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims);
 void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
-void updateInfos(int budget,int abort_trans,info_process*infos);
-void terminazione(info_process *infos,int reason,int dim);
+int getBudget(int my_index);
+void updateBudget(int costoTransazione, int my_index);
+void updateInfos(int budget,int abort_trans,int my_index);
+void terminazione(int reason,int dim);
 void signalsHandler(int sig);
-struct transaction creaTransazione(unsigned int budget);
+int creaTransazione(struct transaction*,int budget);	

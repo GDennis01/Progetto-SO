@@ -12,6 +12,8 @@ Target_User = User
 Target_Node = Node
 all: User Node
 	$(CC) $(OBJ) $(CFLAGS) -o $(TARGET)
+rund: $(TARGET)
+	./$(TARGET) > file.dump
 run: $(TARGET)
 	./$(TARGET)
 User:
@@ -22,3 +24,6 @@ clean:
 	rm master
 	rm User
 	rm Node
+	rm cache.txt
+	rm blocchi.txt
+	rm file.dump
