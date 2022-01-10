@@ -12,12 +12,15 @@
         -Aggiunta del metodo "scritturaMastro"
 */
 #include "common.c"
+#define AUTOSEND -1
 
 int macros[N_MACRO];
 info_process *pid_users;
 info_process *pid_nodes;
+struct sembuf sops;
  int main(int argc, char const *argv[])
 {
+    struct sigaction sa;
     int info_id,macro_id,msgq_id,sem_id,mastro_id,i,j;
     int budget;
     int bytes_read;
@@ -25,7 +28,13 @@ info_process *pid_nodes;
     struct msqid_ds msg_ds;
     msgqbuf msg_buf;
     info_process infos;
-    struct sembuf sops;
+
+    bzero(&sa,sizeof(sa));
+
+    sa.sa_handler=signalsHandler;
+    sigaction(SIGALRM,&sa,NULL);
+    sigaction(SIGUSR1,&sa,NULL);
+    
 
     /*Initializing infos that will be sent every second to the master process*/
     infos.pid=getpid();
@@ -42,17 +51,20 @@ info_process *pid_nodes;
     sem_id=atoi(argv[3]);
 
     mastro_id=atoi(argv[4]);
+    mastro_area_memoria = (transaction_block*)shmat(mastro_id, NULL, 0);
   
-    msgq_id=msgget(getpid(),IPC_CREAT | 0660);
+    for(i=0;i<N_MACRO;i++){
+        macros[i]=shm_macro[i];
+    }
+
+    msgq_id=msgget(getpid(),IPC_CREAT | 0666);
     msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
+    msg_ds.msg_perm.mode=438;
     msgctl(msgq_id,IPC_SET,&msg_ds);
     TEST_ERROR
     
 /*Storing macros in a local variable. That way I can use macros defined in common.h*/
-    for(i=0;i<N_MACRO;i++){
-        macros[i]=shm_macro[i];
-
-    }
+    
 
     printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
@@ -109,7 +121,7 @@ struct transaction creaTransazione(unsigned int budget){
     clock_gettime(CLOCK_REALTIME,&curr_time);
     srand(curr_time.tv_nsec);
     tr.timestamp = curr_time.tv_nsec;/*current clock_time*/
-	tr.sender = -1;/*MACRO DA DEFINIRE*/
+	tr.sender = AUTOSEND;
 	tr.receiver = getpid();
 	tr.amount = budget;
     /*commission for node process*/
@@ -124,17 +136,29 @@ struct transaction creaTransazione(unsigned int budget){
     (una delle condizione di terminazione è appunto il libro mastro pieno)
     se non è pieno, scrive il blocco nel libro mastro.
 */
-int scritturaMastro(){
+int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
     int i=0;
-    while(mastro_area_memoria[i].executed == 1){
-        if(i>SO_REGISTRY_SIZE-1)
-            kill( getppid() , SIGUSR1 );
+    while(mastro_area_memoria[i].executed != 1 && i<SO_REGISTRY_SIZE){  /* l'indice "i" alla fine del ciclo avrà il valore dell'ultimo posto libero*/
         i++;
     }
-    /*
-        Scrittura del blocco nel libro_mastro[i] (l'indici "i" alla fine del ciclo avrà il valore dell'ultimo posto libero)
-    */
+    if(i>SO_REGISTRY_SIZE-1){ /*se posto libero è oltre i confini del mastro, vuol dire che quest'ultimo è pieno */
+        kill( getppid() , SIGUSR1 );
+        return 0;
+    }else{
+        sops.sem_num=2;
+        sops.sem_op=-1;
+        sops.sem_flg=0;
+        semop(semaforo_id,&sops,1); /*seize the resource, now it can write on the mastro*/
+        
+        mastro_area_memoria[i] = nuovoBlocco;
+
+        /* restituzione del semaforo*/
+        sops.sem_op=1;
+        semop(semaforo_id,&sops,1); /*gives back the resource, now other nodes can write on the mastro*/
+        return 1;
+    }
 }
+
 
 
 

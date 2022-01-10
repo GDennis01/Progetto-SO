@@ -1,11 +1,6 @@
 #include "common.c"
  /* Per poter compilare con -std=c89 -pedantic */
-/*-Creare una shared memory(vedi shmget) nel processo master con una chiave definita nel file macro.txt
--Fare execve dei processi user e nodo passando come argomento la chiave della shared memory
--Ogni processo user/nodo farà l'attach alla shmemory e leggerà il contenuto (vedere come leggere la roba dalla shared memory). Una volta finita la lettura si effettuerà il deattach
--Il processo master alla fine farà il deattach finale così da garantire la rimozione della shared memory
-(L'ho scritto come promemoria per non dimenticarmelo)
-
+/*
 GESTIONE NODI:
 Problema: Il master può creare N_NODES + X dove X varia con il crescere del tempo.
 Dove salvo questi X nodi? Dovrei avere una shared memory con una dimensione che varia nel tempo -> Impossibile
@@ -24,12 +19,6 @@ contenente tutti i nuovi nodi creati prima di lui.
 P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction pool di ogni nodo "originale" è piena
 */
 /*
-#define SHM_KEY "123456"
-#define SEM_KEY "11"
-*/
-/*Global variable indicating whether the master should stop its execution or not*/
-
-/*
     Ultime modifiche
         -03/01/2022
             -Modifica al metodo initIPCs()
@@ -40,6 +29,7 @@ P.S. : Per nuovi nodi creati, si intendono quelli generati quando la transaction
 */
 
 int dims=0;
+int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
 
 int main(int argc, char const *argv[])
 {
@@ -47,7 +37,6 @@ int main(int argc, char const *argv[])
     int  i,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
     char str[15],str2[15],str3[15],str4[15];/*Stringified key for shm*/
-    int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
     char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
 
@@ -115,6 +104,7 @@ int main(int argc, char const *argv[])
     semctl(sem_key,1,SETVAL,N_NODES);
     /*Generating user children*/
     semctl(sem_key,0,SETVAL,N_USERS);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
+    semctl(sem_key,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
    
     alarm(SO_SIM_SEC);
 
@@ -205,6 +195,7 @@ void terminazione(info_process * shm_info,int reason,int dim){
         }else printf("Errore, processo sconociuto\n");
          
     }
+    deleteIPCs(info_key,macro_key,sem_key,mastro_key);
     printf("Numero di Processi Utenti terminati prematuramente:%d\n",cnt);
 }
 
@@ -212,6 +203,8 @@ void terminazione(info_process * shm_info,int reason,int dim){
 void signalsHandler(int signal) {
     switch(signal){
     case SIGALRM:
+        terminazione(shm_info,0,dims);
+        break;
     case SIGUSR1: /*Libro mastro is full*/
         terminazione(shm_info,1,dims);
         break;

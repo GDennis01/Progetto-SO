@@ -46,6 +46,12 @@ int main(int argc, char const *argv[])
     infos.pid=getpid();
     infos.type=0;
     infos.abort_trans=0;
+
+    bzero(&sa,sizeof(sa));
+
+    sa.sa_handler=signalsHandler;
+    sigaction(SIGALRM,&sa,NULL);
+    sigaction(SIGUSR1,&sa,NULL);
     
     
     info_id=atoi(argv[1]);/*shared memory id to access shared memory with info related to processes*/
@@ -94,6 +100,7 @@ int main(int argc, char const *argv[])
     
     
     /*Creating a new transaction*/
+    budget = getBudget(&infos);
     tr = creaTransazione(budget);
     /*printTransaction(tr);*/
     /*Sending the transaction to a random selected node.*/
@@ -165,6 +172,13 @@ void updateInfos(int budget,int abort_trans,info_process* infos){
     infos->type=0;
     infos->budget=budget;
     infos->abort_trans=abort_trans;
+}
+
+void updateBudget(int budget, info_process* infos){
+    infos->budget=budget;
+}
+int getBudget(info_process* infos){
+    return infos->budget;
 }
 /*TODO: fixare handle_signal(errori sintattici etc)*/
 void signalsHandler(int signal) {
