@@ -1,12 +1,7 @@
 /*
-
-    
-    TODO: COpiare il metodo di emme: il main inizializza un semaforo a 0. ogni processo lo incrementa di 1 con il flag undo. quando muoiono
-          fa l'undo della operazione sul semaforo. 
-          Per la roba prematuramente etc: Numero totale utenti - semval
-          Per controllare se tutti i processi son tutti morti basta controllare se il semval è a 0
-
     Ultime modifiche
+     -10/01/2022
+        -Eliminazione di updateInfos, l'inizializzazione viene fatta nel master e l'update da checkLedger
      -09/01/2022
         -Ora il processo genera una transazione(correttamente, si spera) alla ricezione di SIGINT
      -08/01/2022
@@ -36,7 +31,7 @@ int sem_id;
 int my_index=0;
 int retry=0;
 int stopped=0;
- transaction tr;/*transction to be sent*/
+transaction tr;/*transction to be sent*/
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
@@ -117,8 +112,6 @@ int main(int argc, char const *argv[])
     sops.sem_flg=SEM_UNDO;
     semop(sem_id,&sops,1);*/
 
-    /*TODO:Rimuovere correttamente questa funzione. E' inutile. CheckLedger fa già tutto ma meglio*/
-    updateInfos(SO_BUDGET_INIT, 0, my_index);
 
      /*The semaphore is used to wait for nodes to finish creating their queues*/
     sops.sem_num=1;
@@ -136,7 +129,7 @@ int main(int argc, char const *argv[])
         
         /*Creating a new transaction*/
         /*By putting in AND the "stopped == 0 || stopped == -1" condition, it tries to create a transaction only if it hasnt been created before
-          (i.e. by receiving a SIGINT and creating a transation in the SIGINT handler portion of code) or if it has failed to create one(in the SIGINT handler)*/
+          (i.e. by receiving a SIGUSR2 and creating a transation in the SIGINT handler portion of code) or if it has failed to create one(in the SIGINT handler)*/
         if((stopped == 0 || stopped == -1) && creaTransazione(&tr,getBudget(my_index)) == -1){
             printf("#%d  NOT ENOUGH BUDGET TO SEND A TRANSACTION\n",getpid());
             retry++;
@@ -227,12 +220,6 @@ int getRndNode(){
 	return rand()%N_NODES;
 }
 
-void updateInfos(int budget,int abort_trans,int my_index){
-    shm_info[my_index].pid=getpid();
-    shm_info[my_index].type=0;
-    shm_info[my_index].budget=budget;
-    shm_info[my_index].abort_trans=abort_trans;
-}
 
 int checkLedger(transaction tr){
     /*Method that checks the whole ledger and match if the transaction sent by the user is written in it.
@@ -301,7 +288,7 @@ int checkLedger(transaction tr){
     sops.sem_flg=0;
     semop(sem_id,&sops,1);
 
-    return 0;/*Transaction not found*/
+    return 0;
 }
 /*Method copied from stack overflow xd*/
 transaction * removeTrans(transaction  tr){
@@ -346,9 +333,9 @@ void signalsHandler(int signal) {
         printf("<<user>> %d ha pulito tutto :) SIGTERM\n", getpid());
         exit(EXIT_SUCCESS);
             break;
-        /*SIGINT is sent to the user by another process(or even from the bash, which is still a process lol)*/
+        /*SIGUSR2 is sent to the user by another process(or even from the bash, which is still a process lol)*/
         case SIGUSR2:
-            printf("HO RICEVUTO UN SIGINT, PROCEDO A CREARE UNA TRANSAZIONE @@@@@@@@@@@@@@@@@@@@\n");
+            printf("HO RICEVUTO UN SIGUSR2, PROCEDO A CREARE UNA TRANSAZIONE @@@@@@@@@@@@@@@@@@@@\n");
             if(creaTransazione(&tr,getBudget(my_index)) == -1){
                 stopped=-1;
             } else stopped=1;

@@ -48,7 +48,7 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
-#define SO_BLOCK_SIZE 5
+#define SO_BLOCK_SIZE 10
 #define SO_REGISTRY_SIZE 5
 
 
@@ -110,9 +110,6 @@ void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims);
 void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
-int getBudget(int my_index);
-void updateBudget(int costoTransazione, int my_index);
-void updateInfos(int budget,int abort_trans,int my_index);
 void terminazione(int reason,int dim);
 void signalsHandler(int sig);
 int creaTransazione(struct transaction*,int budget);	

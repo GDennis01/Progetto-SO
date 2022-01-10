@@ -1,7 +1,8 @@
 /*
    
 	Ultime modifiche:
-
+    -10/01/2022
+        -Ora updateInfos aggiorna correttamente lo stato del processo(vivo o morto)
     -08/01/2022
         -Indice al blocco
     -05/01/2022
@@ -24,7 +25,7 @@
 		-Aggiunta del metodo "creaTransazione"
         -Aggiunta del metodo "scritturaMastro"
 */
-#include "common.c"
+#include "Node_Process.h"
 #define IS_SENDER -1
 int macros[N_MACRO];
 info_process *pid_users;
@@ -144,7 +145,7 @@ info_process *pid_nodes;
 
         scritturaMastro(sem_id,block);
         nanosleep(&time,NULL);/*Simulating the elaboring process*/
-        updateInfos(sum_reward,0,my_index);
+        updateInfos(sum_reward,0,my_index,1);
         /*Resetting the variables for the next cycles*/
         i=0;
         sum_reward=0;
@@ -172,9 +173,10 @@ info_process *pid_nodes;
 /*
     Method that updates the info of the current node
 */
-void updateInfos(int budget,int abort_trans,int index){
+void updateInfos(int budget,int abort_trans,int index,int isAlive){
     shm_info[index].budget+=budget;
     shm_info[index].abort_trans=abort_trans;
+    shm_info[index].alive=isAlive;
 }
 /*
     Creation of the reward transaction
@@ -239,7 +241,7 @@ void signalsHandler(int signal) {
     TEST_ERROR
     printf("Il valore dei trans è:%ld\n",buf.msg_qnum);
 
-    updateInfos(0,trans_left,my_index);
+    updateInfos(0,trans_left,my_index,0);
     shmdt(shm_info);
     shmdt(shm_macro);
     shmdt(mastro_area_memoria);

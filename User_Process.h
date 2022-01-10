@@ -1,5 +1,7 @@
 /*
 	Ultime modifiche:
+	-10/01/2022
+		-Rimozione del prototipo di funzione getBalance e updateBudget
 	-06/01/2022
 		-Aggiunta della lista "trans_sent" e del suo relativo indice trans_sent_index
 		-Aggiunta della macro MAX_LOCAL_TRANS
@@ -8,7 +10,7 @@
 		-Rimozione del prototipo del metodo "creaTransazione" -> spostato in "common.h"
 */
 
-#define MAX_LOCAL_TRANS 100000 /*Maximum transactions saved locally by each user*/
+/*#define MAX_LOCAL_TRANS 100000 Maximum transactions saved locally by each user*/
 #include "common.c"
 
 
@@ -17,6 +19,6 @@ int trans_sent_Index=0; /*max index of the transaction list*/
 
 void printTransaction( transaction tr);
 int getRndNode();
-int getBalance();
 int checkLedger(transaction tr);
+int getBudget(int my_index);
 transaction* removeTrans(transaction tr);

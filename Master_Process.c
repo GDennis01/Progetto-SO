@@ -137,6 +137,7 @@ int main(int argc, char const *argv[])
                 shm_info[i].pid=child_pid;
                 shm_info[i].type=0;
                 shm_info[i].budget=SO_BUDGET_INIT;
+                shm_info[i].alive=1;
                 
                 sops.sem_num=0;
                 sops.sem_op=-1;
@@ -167,6 +168,8 @@ int main(int argc, char const *argv[])
 
             shm_info[N_USERS+i].pid=child_pid;
             shm_info[N_USERS+i].type=1;
+            shm_info[N_USERS+i].alive=1;
+            shm_info[N_USERS+i].budget=0;
 
             
             sops.sem_num=0;
@@ -179,7 +182,7 @@ int main(int argc, char const *argv[])
     /*Waiting for all children to DIE*/
     while(/*child_pid=wait(&status) != -1*/ 1 ){
         nanosleep(&eachSec,NULL);
-        printInfo();
+      
         /*If semctl returns 0, it means every users process  have died*/
         /*if(semValue=semctl(sem_key,3,GETVAL) == 0 ){
             terminazione(3,dims);
