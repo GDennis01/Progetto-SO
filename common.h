@@ -34,8 +34,8 @@
 				       errno,				\
 				       strerror(errno));}
 
-#define N_MACRO 12 /*Numbers of macros to read from "macros.txt"*/
-/*Macros*/
+#define N_MACRO 13 /*Numbers of macros to read from "macros.txt"*/
+/*Run-time Macros*/
 #define N_USERS macros[0]
 #define N_NODES macros[1]
 #define MIN_TRANS_GEN_NSEC macros[2]
@@ -48,6 +48,8 @@
 #define SO_TP_SIZE macros[9]
 #define SO_N_FRIENDS macros[10]
 #define SO_SIM_SEC macros[11]
+#define SO_HOPS macros[12]
+/*Compilation-time Macros*/
 #define SO_BLOCK_SIZE 10
 #define SO_REGISTRY_SIZE 5
 

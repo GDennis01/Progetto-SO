@@ -98,8 +98,9 @@ int main(int argc, char const *argv[])
     mastro_area_memoria[0].executed=0;
     
     TEST_ERROR
-    printf("[PARENT #%d] ID della SHM_INFO:%d     ID del SEM:%d\n",getpid(),info_key,sem_key);
     
+    printf("[PARENT #%d] ID della SHM_INFO:%d     ID del SEM:%d\n",getpid(),info_key,sem_key);
+    /*TODO:inglobare sti sprintf in una unica funzione*/
     sprintf(str,"%d",info_key);/*I convert the key from int to string*/
     arguments[1]=str;
     
