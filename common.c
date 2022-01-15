@@ -15,7 +15,7 @@ TODO:Spostarlo in master.c maybe?*/
 void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims){
     *info_key=shmget(IPC_PRIVATE,dims,IPC_CREAT| 0660);/*Getting the key for the shared memory(and also initializing it)*/
     *macro_key=shmget(IPC_PRIVATE,N_MACRO*sizeof(int),IPC_CREAT | 0660);
-    *sem_key=semget(IPC_PRIVATE,3,IPC_CREAT | 0660);
+    *sem_key=semget(IPC_PRIVATE,4,IPC_CREAT | 0660);
     *mastro_key = shmget(IPC_PRIVATE,SO_REGISTRY_SIZE*sizeof(transaction_block),IPC_CREAT| 0660);
 }
 

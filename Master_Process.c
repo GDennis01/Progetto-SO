@@ -47,18 +47,24 @@ int compareBudget(const void * a, const void * b){
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
-    int  i,j,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
+    int  i,j,z,status,err,child_pid,fd = open("macros.txt",O_RDONLY);
     int macros[N_MACRO];
+    int flag;
     char str[15],str2[15],str3[15],str4[15];/*Stringified key for shm*/
     char *arguments[]={NULL,NULL,NULL,NULL,NULL,NULL};/*First arg of argv should be the filename by default*/
     struct sembuf sops;
     int activeProcess= 0;
     budgetSortedArray *budgetArray;
     budgetSortedArray *budgetArrayNO;
+    int *friends;
+    int pid_friend;
+    msgqbuf node_friend;
 
     struct timespec time;
     time.tv_sec=1;
     time.tv_nsec=0;
+
+    srand(getpid());
 
     bzero(&sa,sizeof(sa));
     sa.sa_handler=signalsHandler;
@@ -122,6 +128,7 @@ int main(int argc, char const *argv[])
     semctl(sem_key,0,SETVAL,N_USERS+N_NODES);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
     semctl(sem_key,1,SETVAL,N_NODES);/*Semaphore used to allow nodes to finish creating their queues*/
     semctl(sem_key,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
+    semctl(sem_key,3,SETVAL,1);/*Semaphore used by master to wait for nodes to finish creating their queues*/
 
     /*Triggering the countdown of the simulation*/
     alarm(SO_SIM_SEC);
@@ -188,6 +195,59 @@ int main(int argc, char const *argv[])
             break;
         }
     }
+
+    /*TODO:rendere sto aborto un metodo così non si nota*/
+    /*Aspetto che i nodi finiscano di creare le loro code*/
+    sops.sem_num=1;
+    sops.sem_op=0;
+    sops.sem_flg=0;
+    semop(sem_key,&sops,1);
+
+    j=0;
+    while(j<N_NODES){
+      
+        i=0;
+        friends=malloc(sizeof(info_process)*SO_N_FRIENDS);/*Creating tmp array to store all friends that are going to be sent*/
+        while(i<SO_N_FRIENDS){
+            flag=1;
+            do{
+                pid_friend=rand()%N_NODES;
+                flag=1;
+                
+                if(pid_friend != j){/*A node cannot be friend to himself. The index identifies univoquely the node thus I compare them*/
+                for(z=0;z<i && flag==1;z++){
+                    if(pid_friend == friends[z]){
+                        flag=0;
+                    }
+                }
+                }else flag =0;
+               
+            }while(flag==0);
+
+            friends[i]=pid_friend;
+            i++;
+        }
+
+        /*printf("Amici del nodo %d:\n",j);
+        for(z=0;z<SO_N_FRIENDS;z++){
+            printf("Amico %d°:%d\n",j,friends[z]);
+        }*/
+        for(z=0;z<SO_N_FRIENDS;z++){
+            /*Sending friends one by one in form of a fake transaction*/
+            node_friend.mtype=shm_info[N_USERS+j].pid;
+            node_friend.tr.receiver=friends[z];
+            if(msgsnd(msgget(shm_info[N_USERS+j].pid,0666),&node_friend,sizeof(node_friend.tr),0) == -1 ){
+                TEST_ERROR
+            }
+        }
+        j++;
+    }
+    /*Rilascio il semaforo così i nodi/user possono chillare*/
+    sops.sem_num=3;
+    sops.sem_op=-1;
+    sops.sem_flg=0;
+    semop(sem_key,&sops,1);
+
     /*Waiting for all children to DIE*/
     while(1){
         nanosleep(&time,NULL);  /*1 sec */

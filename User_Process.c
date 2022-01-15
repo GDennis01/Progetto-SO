@@ -124,6 +124,11 @@ int main(int argc, char const *argv[])
     sops.sem_op=0;
     sops.sem_flg=0;
     semop(sem_id,&sops,1);
+
+    sops.sem_num=3;
+    sops.sem_op=0;
+    sops.sem_flg=0;
+    semop(sem_id,&sops,1);
     /*Initializing the list of transaction sent but not yet written in the ledger*/
     trans_sent=(transaction*)malloc(sizeof(transaction));
 

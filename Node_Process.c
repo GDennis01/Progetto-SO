@@ -51,16 +51,15 @@ info_process *pid_nodes;
 
     int info_id,macro_id,sem_id,mastro_id,i,j;
     int budget;
-    
     int sum_reward=0;
     int bytes_read;
     struct sigaction sa;
     transaction tr;
     transaction_block block;
     struct msqid_ds msg_ds;
-    
     info_process infos;
     struct timespec time;
+    int *my_friends;
 
     /* signal handler */
     bzero(&sa,sizeof(sa));
@@ -87,7 +86,7 @@ info_process *pid_nodes;
     for(i=0;i<N_MACRO;i++){
         macros[i]=shm_macro[i];
     }
-
+    my_friends=malloc(sizeof(int)*SO_N_FRIENDS);
     
     msgq_id=msgget(getpid(),IPC_CREAT | 0666);
     /*16384 is the max default size of message queue*/
@@ -99,7 +98,13 @@ info_process *pid_nodes;
     }
 
   
+    /*Inizio ricezione amici*/
 
+
+
+
+
+    /*Fine ricezione amici*/
     /*printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);*/
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
     sops.sem_num=1;
@@ -107,6 +112,18 @@ info_process *pid_nodes;
     sops.sem_flg=0;
     semop(sem_id,&sops,1);
 
+    for(i=0;i<SO_N_FRIENDS;i++){
+        msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
+        my_friends[i]=msg_buf.tr.receiver;
+        printf("Son nodo %d e questo è il mio %d° amico:%d\n",getpid(),i,shm_info[N_USERS+my_friends[i]].pid);
+        TEST_ERROR
+    }
+    
+
+    sops.sem_num=3;
+    sops.sem_op=0;
+    sops.sem_flg=0;
+    semop(sem_id,&sops,1);
     /*
     printf("[NODE CHILD #%d] SEMVAL:%d\n",getpid(),semctl(sem_id,1,GETVAL));
     printf("[NODE CHILD #%d] ID della SHM:%d\n",getpid(),macro_id);
@@ -135,9 +152,9 @@ info_process *pid_nodes;
     i=0;
     time.tv_sec=1;/*1 for debug mode */
     time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;/*[MIN_TRANS_PROC,MAX_TRANS_PROC]*/
-    TEST_ERROR
+   
     while(1){
-    TEST_ERROR 
+    
     if(i==SO_BLOCK_SIZE-1){/*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/
        creaTransazione(&tr,sum_reward);/*Saving the reward transaction in the last spot of the block*/
         tr.executed=1;
