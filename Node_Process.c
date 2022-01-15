@@ -195,11 +195,11 @@ info_process *pid_nodes;
             if(msgsnd(msgget(pidfriend,0666),&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){
                 if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){}
             }
-            printf("#####RIMBALZELLO: %d, pidfreidn: %d \n", tempo, pidfriend);
+            printf("#####RIMBALZELLO: %d, pidfreidn: %d   Sender:%d  Receiver:%d  NSec:%ld\n", tempo, pidfriend,master_buf.tr.sender,master_buf.tr.receiver,master_buf.tr.timestamp.tv_nsec);
         }else{
             /*mandala al father che ha hops 0 */
 
-            printf("#####PADRE RIMBALALO TU");
+            printf("#####PADRE RIMBALALO TU\n");
             master_buf.mtype = getppid();
             if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),0) == -1){}
         }

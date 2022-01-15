@@ -79,6 +79,7 @@ int main(int argc, char const *argv[])
     sem_id=atoi(argv[3]);/*id of semaphore*/
     mastro_id=atoi(argv[4]);/*id of mastro*/
     
+    printf("INFO:%d MACRO:%d SEM:%d MASTRO:%d\n",info_id,macro_id,sem_id,mastro_id);
     /*Attaching to shared memories*/
     shm_macro=(int*)shmat(macro_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
     shm_info=(info_process*)shmat(info_id,NULL,0666);/*Attaching to shm with info related to processes*/
@@ -134,7 +135,7 @@ int main(int argc, char const *argv[])
     /*Initializing the list of transaction sent but not yet written in the ledger*/
     trans_sent=(transaction*)malloc(sizeof(transaction));
 
-    TEST_ERROR
+    
     while(1){
     
         time.tv_nsec=rand()%(MAX_TRANS_GEN_NSEC+1-MIN_TRANS_GEN_NSEC) +MIN_TRANS_GEN_NSEC;/*[MIN_TRANS_GEN,MAX_TRANS_GEN]*/

@@ -118,7 +118,10 @@ typedef struct budgetSortedArray {
 void read_macros(int fd,int * macros);
 /*Function used to create a new transaction*/
 void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int dims);
+void initSem(int sem_id,int n_users,int n_nodes);
+int compareBudget(const void * a, const void * b);
 void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
+void check_err_keys(int info_key,int macro_key,int sem_key,int mastro_key);
 void terminazione(int reason,int dim);
 void signalsHandler(int sig);
 int creaTransazione(struct transaction*,int budget);

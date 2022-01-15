@@ -38,11 +38,6 @@ void printTransaction(struct transaction tr){
 int dims=0;
 int info_key,macro_key,sem_key,mastro_key;/*key:key for shared memory key2:key for semaphores  key3:key for message queue*/
 
-int compareBudget(const void * a, const void * b){
-    int aa = (int)(((budgetSortedArray *)a)->budget);
-    int bb = (int)(((budgetSortedArray *)b)->budget);
-    return aa-bb;
-}
 
 int main(int argc, char const *argv[])
 {
@@ -79,27 +74,10 @@ int main(int argc, char const *argv[])
     dims=sizeof(info_process)*(N_USERS+N_NODES);
 
     initIPCS(&info_key,&macro_key,&sem_key,&mastro_key, dims);
-    shm_info=shmat(info_key,NULL,0660);
-    shm_macro=shmat(macro_key,NULL,0660);
-    mastro_area_memoria = (transaction_block*)shmat(mastro_key, NULL, 0);  /*così leggi a blocchi di transazione*/
 
+    check_err_keys(info_key,macro_key,sem_key,mastro_key);
 
-    if(info_key==-1){
-        TEST_ERROR
-        exit(1);
-    }
-    if(macro_key==-1){
-        TEST_ERROR
-        exit(1);
-    }
-    if(sem_key==-1){
-        TEST_ERROR
-        exit(1);
-    }
-    if(mastro_key==-1){
-        TEST_ERROR
-        exit(1);
-    }
+    
     /*Initializing the first area of the shared memory of the ledger*/
     mastro_area_memoria[0].executed=0;
     
@@ -109,6 +87,7 @@ int main(int argc, char const *argv[])
     /*TODO:inglobare sti sprintf in una unica funzione*/
     sprintf(str,"%d",info_key);/*I convert the key from int to string*/
     arguments[1]=str;
+    /*initParam(info_key,macro_key,sem_key,mastro_key,arguments);*/
     
     sprintf(str2,"%d",macro_key);/*I convert the key from int to string*/
     arguments[2]=str2;/*Had to create another temporary string(str2) due to strange behaviour with sprintf*/
@@ -118,7 +97,7 @@ int main(int argc, char const *argv[])
 
     sprintf(str4,"%d",mastro_key);/*I convert the key from int to string*/
     arguments[4]=str4;
-
+    
     /*Writing Macros to shared memory*/
     for(i=0;i<N_MACRO;i++){
         shm_macro[i]=macros[i];
@@ -126,12 +105,8 @@ int main(int argc, char const *argv[])
 
     masterq_id = msgget(getpid(),IPC_CREAT | 0666);/*coda in cui mandiamo transazioni rimbalzate*/
 
-    /*Semaphores initialization*/
-    semctl(sem_key,0,SETVAL,N_USERS+N_NODES);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
-    semctl(sem_key,1,SETVAL,N_NODES);/*Semaphore used to allow nodes to finish creating their queues*/
-    semctl(sem_key,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
-    semctl(sem_key,3,SETVAL,1);/*Semaphore used by master to wait for nodes to finish creating their queues*/
-
+    initSem(sem_key,N_USERS,N_NODES);
+    
     /*Triggering the countdown of the simulation*/
     alarm(SO_SIM_SEC);
 
@@ -304,7 +279,18 @@ int main(int argc, char const *argv[])
         activeProcess=0;
 
         /*controllo masterq per eventuali transazioni che hanno esaurito shops*/
-        
+        if(msgrcv(masterq_id,&node_friend,sizeof(node_friend.tr),getpid(),IPC_NOWAIT) != -1){
+            /*Gotta create a new node*/
+            switch(child_pid=fork()){
+                case 0:
+                     arguments[0]="Node";
+                     execve("Node",arguments,NULL);
+                    break;
+
+                default:
+                    break;
+            }
+        }
 
     }
     printf("[PARENT] ABOUT TO ABORT\n");
