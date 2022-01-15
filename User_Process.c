@@ -327,7 +327,7 @@ void signalsHandler(int signal) {
         shm_info[my_index].alive=0;
         shmdt(shm_macro);
         shmdt(shm_info);
-        printf("<<user>> %d ha pulito tutto :) SIGUSR1 \n", getpid());
+        /*printf("<<user>> %d ha pulito tutto :) SIGUSR1 \n", getpid());*/
         exit(EXIT_SUCCESS);
             break;
         /*SIGTERM is sent to the user when the simulation is ending*/
@@ -336,7 +336,7 @@ void signalsHandler(int signal) {
         shm_info[my_index].alive=0;
         shmdt(shm_macro);
         shmdt(shm_info);
-        printf("<<user>> %d ha pulito tutto :) SIGTERM\n", getpid());
+        /*printf("<<user>> %d ha pulito tutto :) SIGTERM\n", getpid());*/
         exit(EXIT_SUCCESS);
             break;
         /*SIGUSR2 is sent to the user by another process(or even from the bash, which is still a process lol)*/
