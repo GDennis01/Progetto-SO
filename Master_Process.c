@@ -124,6 +124,8 @@ int main(int argc, char const *argv[])
         shm_macro[i]=macros[i];
     }
 
+    masterq_id = msgget(getpid(),IPC_CREAT | 0666);/*coda in cui mandiamo transazioni rimbalzate*/
+
     /*Semaphores initialization*/
     semctl(sem_key,0,SETVAL,N_USERS+N_NODES);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
     semctl(sem_key,1,SETVAL,N_NODES);/*Semaphore used to allow nodes to finish creating their queues*/
@@ -300,6 +302,10 @@ int main(int argc, char const *argv[])
         }
         
         activeProcess=0;
+
+        /*controllo masterq per eventuali transazioni che hanno esaurito shops*/
+        
+
     }
     printf("[PARENT] ABOUT TO ABORT\n");
     

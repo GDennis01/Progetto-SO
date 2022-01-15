@@ -50,12 +50,14 @@
 #define SO_SIM_SEC macros[11]
 #define SO_HOPS macros[12]
 /*Compilation-time Macros*/
-#define SO_BLOCK_SIZE 10
-#define SO_REGISTRY_SIZE 5
+#define SO_BLOCK_SIZE 8
+#define SO_REGISTRY_SIZE 30
 
 
 /*Shared variable used to store macros*/
 int *shm_macro;
+
+int masterq_id;
 
 /*Struct used to define a transaction*/
 typedef struct transaction{
@@ -65,6 +67,7 @@ typedef struct transaction{
 	pid_t receiver;
 	int amount;
 	int reward;
+	int hops;
 } transaction;
 
 /*Struct used to define a single transaction block to be then processed*/
@@ -118,4 +121,4 @@ void initIPCS(int *info_key,int *macro_key,int *sem_key, int *mastro_key, int di
 void deleteIPCs(int info_key,int macro_key,int sem_key, int mastro_key);
 void terminazione(int reason,int dim);
 void signalsHandler(int sig);
-int creaTransazione(struct transaction*,int budget);	
+int creaTransazione(struct transaction*,int budget);

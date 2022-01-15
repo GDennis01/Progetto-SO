@@ -32,7 +32,7 @@ info_process *pid_users;
 info_process *pid_nodes;
  struct sembuf sops;
  int msgq_id;
- msgqbuf msg_buf;
+ msgqbuf msg_buf, master_buf;
  int my_index=0;
  FILE * debug_blocco_nodo;
 
@@ -60,6 +60,8 @@ info_process *pid_nodes;
     info_process infos;
     struct timespec time;
     int *my_friends;
+    int pidfriend;
+    int tempo;
 
     /* signal handler */
     bzero(&sa,sizeof(sa));
@@ -118,6 +120,9 @@ info_process *pid_nodes;
         printf("Son nodo %d e questo è il mio %d° amico:%d\n",getpid(),i,shm_info[N_USERS+my_friends[i]].pid);
         TEST_ERROR
     }
+
+    /*masterq*/
+    masterq_id = msgget(getppid(),IPC_CREAT | 0666);/*coda in cui mandiamo transazioni rimbalzate*/
     
 
     sops.sem_num=3;
@@ -152,11 +157,12 @@ info_process *pid_nodes;
     i=0;
     time.tv_sec=1;/*1 for debug mode */
     time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;/*[MIN_TRANS_PROC,MAX_TRANS_PROC]*/
+
    
     while(1){
     
     if(i==SO_BLOCK_SIZE-1){/*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/
-       creaTransazione(&tr,sum_reward);/*Saving the reward transaction in the last spot of the block*/
+        creaTransazione(&tr,sum_reward);/*Saving the reward transaction in the last spot of the block*/
         tr.executed=1;
         block.transactions[i]=tr;
 
@@ -177,13 +183,31 @@ info_process *pid_nodes;
         block.transactions[i]=msg_buf.tr;/*Saving the transaction just read in the block to-be-executed*/
         i++;
     }
-    /*printf("[NODE CHILD #%d] LETTI %d BYTES\n",getpid(),bytes_read);*/
+    
+    /*rimbalzo hops*/
+    bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),IPC_NOWAIT);
+    if(bytes_read > 0){
+        tempo = master_buf.tr.hops;
+        if(tempo > 0){
+            pidfriend = shm_info[N_USERS+my_friends[rand()%SO_N_FRIENDS]].pid;
+            master_buf.mtype = pidfriend ; /*preso friend random nel modo più complesso possibile*/
+            tempo = tempo -1;
+            if(msgsnd(msgget(pidfriend,0666),&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){
+                if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){}
+            }
+            printf("#####RIMBALZELLO: %d, pidfreidn: %d \n", tempo, pidfriend);
+        }else{
+            /*mandala al father che ha hops 0 */
+
+            printf("#####PADRE RIMBALALO TU");
+            master_buf.mtype = getppid();
+            if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),0) == -1){}
+        }
     }
 
-    /*
-    msgctl(msgq_id,IPC_RMID,NULL);*/
-    printf("[NODE CHILD] ABOUT TO ABORT\n");
+    }
 
+    printf("[NODE CHILD] ABOUT TO ABORT\n");
     return 0;
 }
 
@@ -208,6 +232,7 @@ int creaTransazione(struct transaction* tr,int budget){
     /*commission for node process*/
     tr->reward=0;
     tr->executed = 1 ;
+    tr->hops=SO_HOPS;
     return 0;
 }
 
@@ -251,11 +276,11 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
 
 void signalsHandler(int signal) {
     int trans_left=0;
-     struct msqid_ds buf;
+    struct msqid_ds buf;
     /*Counting how many transactions are left in the transaction pool(aka message queue)*/
     msgctl(msgq_id,IPC_STAT,&buf);
     trans_left=buf.msg_qnum;
-    TEST_ERROR
+    
     printf("Il valore dei trans è:%ld\n",buf.msg_qnum);
 
     updateInfos(0,trans_left,my_index,0);
