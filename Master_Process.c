@@ -237,14 +237,17 @@ int main(int argc, char const *argv[])
                 activeProcess++;
             }
         }
+        
+        
         printf("Utenti ancora attivi: %d / %d \n",activeProcess,N_USERS);
         budgetArray = realloc(budgetArray, sizeof(budgetSortedArray)*activeProcess);
+        
         if(activeProcess == 0){
             terminazione(2, dims);  /*all dead we close this shit*/
         }else if(activeProcess > MAX_PRINTABLE_PROCESSES){   /*if child > x -> stampa solo di quelli con più budget e quelli con meno budget */
             qsort(budgetArray, activeProcess, sizeof(budgetSortedArray), compareBudget);
             for(i=0; i<MAX_PRINTABLE_PROCESSES/2; i++){
-                printf("[User Process #%d]\nBilancio:%d\n",shm_info[budgetArray[activeProcess-i].index].pid, budgetArray[activeProcess-i].budget);
+                printf("[User Process #%d]\nBilancio:%d\n",shm_info[budgetArray[activeProcess-1-i].index].pid, budgetArray[activeProcess-1-i].budget);
             }
             printf("...\n");
             for(i=MAX_PRINTABLE_PROCESSES/2; i>=0; i--){
@@ -261,18 +264,19 @@ int main(int argc, char const *argv[])
             budgetArrayNO[i-N_USERS].budget = shm_info[i].budget;
             budgetArrayNO[i-N_USERS].index = i;
         }
+        
         if(N_NODES>MAX_PRINTABLE_PROCESSES){
             qsort(budgetArrayNO, N_NODES, sizeof(budgetSortedArray), compareBudget);
             for(i=0; i<MAX_PRINTABLE_PROCESSES/2; i++){
-                printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[N_NODES-i].index].pid, budgetArrayNO[N_NODES-i].budget);
+                printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[N_NODES-1-i].index].pid, budgetArrayNO[N_NODES-1-i].budget);
             }
             printf("...\n");
             for(i=MAX_PRINTABLE_PROCESSES/2; i>=0; i--){
                 printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[i].index].pid,budgetArrayNO[i].budget);
             }
         }else{
-            for(i=N_USERS;i<N_USERS+N_NODES;i++){
-                printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[i-N_USERS].index].pid,budgetArrayNO[i-N_USERS].budget);
+            for(i=0;i<N_NODES;i++){
+                printf("[Node Process #%d]\nBilancio:%d\n",shm_info[budgetArrayNO[i].index].pid,budgetArrayNO[i].budget);
             }
         }
         
