@@ -99,6 +99,16 @@ info_process *pid_nodes;
         TEST_ERROR
     }
 
+    /*
+            msgrcv
+            linked_list[i]=new transaction
+            if(numero_trans(linked_list) == SO_BLOCK SIZE)
+                elaboro blocco
+            se no ciclo ancora
+            
+            
+    */
+
   
     /*Inizio ricezione amici*/
 
