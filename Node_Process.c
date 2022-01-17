@@ -56,7 +56,7 @@ info_process *pid_nodes;
     printf("[NODE CHILD #%d]Reward:%d\n",getpid(),tr.reward);
     printf("[NODE CHILD #%d]TimestampSec:%ld  NSec:%ld\n",getpid(),tr.timestamp.tv_sec,tr.timestamp.tv_nsec);
     printf("[NODE CHILD #%d]Amount:%d\n",getpid(),tr.amount);
-    printf("[NODE CHILD #%d]Hops:%d",getpid(),tr.hops);
+    printf("[NODE CHILD #%d]Hops:%d\n",getpid(),tr.hops);
 }
  int main(int argc, char const *argv[])
 {
@@ -126,7 +126,7 @@ info_process *pid_nodes;
     for(i=0;i<SO_N_FRIENDS;i++){
         msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
         my_friends[i]=msg_buf.tr.receiver;
-        printf("Son nodo %d e questo è il mio %d° amico:%d\n",getpid(),i,shm_info[N_USERS+my_friends[i]].pid);
+        /*printf("Son nodo %d e questo è il mio %d° amico:%d\n",getpid(),i,shm_info[N_USERS+my_friends[i]].pid);*/
         TEST_ERROR
     }
 
@@ -177,16 +177,17 @@ info_process *pid_nodes;
 
         if(n_trans == SO_TP_SIZE){
             if((bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),0)) >0){
-                printf("BYTES READ PD:%d\n",bytes_read);
-                tempo = master_buf.tr.hops;
-                /*printTransaction(master_buf.tr);*/
-                if(tempo > 0){
+                
+                if(master_buf.tr.hops > 0){
                     pidfriend = shm_info[N_USERS+my_friends[rand()%SO_N_FRIENDS]].pid;
                     master_buf.mtype = pidfriend ; /*preso friend random nel modo più complesso possibile*/
-                    tempo = tempo -1;
-                    msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT);
-                
-                printf("#####RIMBALZELLO: %d, pidfreidn: %d   Sender:%d  Receiver:%d  NSec:%ld\n", tempo, pidfriend,master_buf.tr.sender,master_buf.tr.receiver,master_buf.tr.timestamp.tv_nsec);
+                    master_buf.tr.hops = master_buf.tr.hops -1;
+                    if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1)
+                        fprintf(stderr,"HO FALLITO\n");
+                    if(master_buf.tr.hops <3)
+                        fprintf(stderr,"MINORE DI 3 SIUU\n");
+                    printf("#####RIMBALZELLO: %d, pidfreidn: %d   Sender:%d  Receiver:%d  NSec:%ld\n", master_buf.tr.hops, pidfriend,master_buf.tr.sender,master_buf.tr.receiver,master_buf.tr.timestamp.tv_nsec);
+                    printTransaction(master_buf.tr);    
                 }else{
                 /*mandala al father che ha hops 0 */
 

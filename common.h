@@ -50,7 +50,7 @@
 #define SO_SIM_SEC macros[11]
 #define SO_HOPS macros[12]
 /*Compilation-time Macros*/
-#define SO_BLOCK_SIZE 4
+#define SO_BLOCK_SIZE 3
 #define SO_REGISTRY_SIZE 10
 
 /*Shared variable used to store macros*/
