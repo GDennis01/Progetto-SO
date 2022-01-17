@@ -116,7 +116,7 @@ info_process *pid_nodes;
     semop(sem_id,&sops,1);
 
     for(i=0;i<SO_N_FRIENDS;i++){
-        msgrcv(masterq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
+        msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
         my_friends[i]=msg_buf.tr.receiver;
         printf("Son nodo %d e questo è il mio %d° amico:%d\n",getpid(),i,shm_info[N_USERS+my_friends[i]].pid);
         TEST_ERROR
