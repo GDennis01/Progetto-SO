@@ -50,9 +50,8 @@
 #define SO_SIM_SEC macros[11]
 #define SO_HOPS macros[12]
 /*Compilation-time Macros*/
-#define SO_BLOCK_SIZE 8
-#define SO_REGISTRY_SIZE 30
-
+#define SO_BLOCK_SIZE 4
+#define SO_REGISTRY_SIZE 10
 
 /*Shared variable used to store macros*/
 int *shm_macro;
@@ -68,7 +67,10 @@ typedef struct transaction{
 	int amount;
 	int reward;
 	int hops;
+	struct transaction * next;/*next node in the list*/
 } transaction;
+
+typedef transaction* trans_pool;
 
 /*Struct used to define a single transaction block to be then processed*/
 typedef struct transaction_block{
@@ -125,3 +127,9 @@ void check_err_keys(int info_key,int macro_key,int sem_key,int mastro_key);
 void terminazione(int reason,int dim);
 void signalsHandler(int sig);
 int creaTransazione(struct transaction*,int budget);
+trans_pool insertHead(trans_pool p,transaction tr);
+trans_pool insertTail(trans_pool p,transaction tr);
+void transFree(trans_pool p);
+void transPrint(trans_pool p);
+trans_pool transDeleteIf(trans_pool head , transaction tr);
+int countTrans(trans_pool p);

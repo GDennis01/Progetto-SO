@@ -27,6 +27,7 @@
 */
 #include "Node_Process.h"
 #define IS_SENDER -1
+
 int macros[N_MACRO];
 info_process *pid_users;
 info_process *pid_nodes;
@@ -35,10 +36,13 @@ info_process *pid_nodes;
  msgqbuf msg_buf, master_buf;
  int my_index=0;
  FILE * debug_blocco_nodo;
+ int n_trans=0;
+ int blocks_written=0;
 
- void printblocco(struct transaction_block nuovoBlocco){
+ void printblocco( transaction_block nuovoBlocco){
      int i=0;
      transaction tr;
+     /*printf("Porcodio@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");*/
      fprintf(debug_blocco_nodo,"[NODE CHILD #%d] Il seguente blocco è stato scritto sul mastro:\n",getpid());
      for(i=0;i<SO_BLOCK_SIZE;i++){
          tr=nuovoBlocco.transactions[i];
@@ -53,6 +57,7 @@ info_process *pid_nodes;
     int budget;
     int sum_reward=0;
     int bytes_read;
+    
     struct sigaction sa;
     transaction tr;
     transaction_block block;
@@ -62,6 +67,8 @@ info_process *pid_nodes;
     int *my_friends;
     int pidfriend;
     int tempo;
+    trans_pool pool;
+
 
     /* signal handler */
     bzero(&sa,sizeof(sa));
@@ -90,28 +97,12 @@ info_process *pid_nodes;
     }
     my_friends=malloc(sizeof(int)*SO_N_FRIENDS);
     
+    /*Pool size is equal to the number of transaction maximum allowed(SO_TP_SIZE) times the size of a single transaction*/
+    pool=malloc(SO_TP_SIZE*sizeof(*pool));
+    
     msgq_id=msgget(getpid(),IPC_CREAT | 0666);
     /*16384 is the max default size of message queue*/
-    if(sizeof(transaction)*SO_TP_SIZE < 16384){ 
-        msg_ds.msg_qbytes=sizeof(transaction)*SO_TP_SIZE;
-        msg_ds.msg_perm.mode=438;
-        msgctl(msgq_id,IPC_SET,&msg_ds);/*Setting the size of the message queue equal to SO_TP_SIZE*/
-        TEST_ERROR
-    }
-
-    /*
-            msgrcv
-            linked_list[i]=new transaction
-            if(numero_trans(linked_list) == SO_BLOCK SIZE)
-                elaboro blocco
-            se no ciclo ancora
-            
-            
-    */
-
-  
-    /*Inizio ricezione amici*/
-
+    
 
 
 
@@ -168,35 +159,46 @@ info_process *pid_nodes;
     time.tv_sec=1;/*1 for debug mode */
     time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;/*[MIN_TRANS_PROC,MAX_TRANS_PROC]*/
 
-   
     while(1){
-    
-    if(i==SO_BLOCK_SIZE-1){/*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/
-        creaTransazione(&tr,sum_reward);/*Saving the reward transaction in the last spot of the block*/
-        tr.executed=1;
-        block.transactions[i]=tr;
+        while(n_trans < SO_TP_SIZE &&  ((bytes_read=msgrcv(masterq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),IPC_NOWAIT)) > 0) /*&& errno != ENOMSG*/ ){
+            /*If the trans pool is empty, im gonna insert the new trans in the head instead of the tail :D*/
+            pool=(n_trans == 0)  ? insertHead(pool,msg_buf.tr) : insertTail(pool,msg_buf.tr);
+            n_trans++;
+        } 
+        bytes_read=0;
 
-        scritturaMastro(sem_id,block);
+        if(blocks_written>SO_REGISTRY_SIZE-1)
+            {
+                  kill( getppid() , SIGUSR1 );
+                  raise(SIGTERM);
+            }
+        if(n_trans >= SO_BLOCK_SIZE -1){ 
+            pool=createBlock(pool,&sum_reward,&block);
+            /*If there's just one spot left on the block, I proceed to fill it with a reward transaction*/
+            creaTransazione(&tr,sum_reward);/*Saving the reward transaction in the last spot of the block*/
+            tr.executed=1;
+            block.transactions[SO_BLOCK_SIZE-1]=tr;
+            printblocco(block);
+            scritturaMastro(sem_id,block);
+        }
         nanosleep(&time,NULL);/*Simulating the elaboring process*/
         updateInfos(sum_reward,0,my_index,1);
-        /*Resetting the variables for the next cycles*/
-        i=0;
         sum_reward=0;
         time.tv_sec=1;/*1 for debug mode*/
         time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;    
-    }
 
-    bytes_read=msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
+    /*Reading all transaction sent to me till noone are left*/
+    
 
-    if(bytes_read >= 32){/*It reads only 32 bytes/transaction aka if the msgrcv went well*/
-        sum_reward=sum_reward+msg_buf.tr.reward;
-        block.transactions[i]=msg_buf.tr;/*Saving the transaction just read in the block to-be-executed*/
-        i++;
-    }
+
+
+    /*bytes_read=msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0); */
+
+    
     
     /*rimbalzo hops*/
-    bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),IPC_NOWAIT);
-    if(bytes_read > 0){
+   /* bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),IPC_NOWAIT);*/
+    if(/*bytes_read > 0*/ 0==1){
         tempo = master_buf.tr.hops;
         if(tempo > 0){
             pidfriend = shm_info[N_USERS+my_friends[rand()%SO_N_FRIENDS]].pid;
@@ -209,9 +211,9 @@ info_process *pid_nodes;
         }else{
             /*mandala al father che ha hops 0 */
 
-            printf("#####PADRE RIMBALALO TU\n");
+            /*printf("#####PADRE RIMBALALO TU\n");
             master_buf.mtype = getppid();
-            if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),0) == -1){}
+            if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),0) == -1){}*/
         }
     }
 
@@ -253,26 +255,24 @@ int creaTransazione(struct transaction* tr,int budget){
     se non è pieno, scrive il blocco nel libro mastro.
 */
 int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
-    int i=0;
- /* l'indice "i" alla fine del ciclo avrà il valore dell'ultimo posto libero*/    
-    while(mastro_area_memoria[i].executed == 1 && i<SO_REGISTRY_SIZE){  
-        i++;
-    }
-    if(i>SO_REGISTRY_SIZE-1){ /*se il posto libero è oltre i confini del mastro, vuol dire che quest'ultimo è pieno */
-        kill( getppid() , SIGUSR1 );
-        raise(SIGTERM);/*Mi ammazzo prima che mi ammazzi il padre*/
-        return 0;
-    }else{
-       
+        int i=0;
         sops.sem_num=2;
         sops.sem_op=-1;
         sops.sem_flg=0;
         semop(semaforo_id,&sops,1); /*seize the resource, now it can write on the mastro*/
+
+    /* l'indice "i" alla fine del ciclo avrà il valore dell'ultimo posto libero*/    
+        while(mastro_area_memoria[i].executed == 1 && i<SO_REGISTRY_SIZE){  
+            i++;
+            
+        }
+        blocks_written=i;
+        
+       
         mastro_area_memoria[i] = nuovoBlocco;
         mastro_area_memoria[i].id=i;
         mastro_area_memoria[i].executed=1;
         mastro_area_memoria[i+1].executed=0; 
-
         /*printf("Io, Nodo #%d, ho scritto nella %d° posizione del libro mastro:\n",getpid(),i+1);*/
        /* printblocco(nuovoBlocco);*/
         /* restituzione del semaforo*/
@@ -280,20 +280,12 @@ int scritturaMastro(int semaforo_id, struct transaction_block nuovoBlocco){
         sops.sem_op=1;
         sops.sem_flg=0;
         semop(semaforo_id,&sops,1); /*gives back the resource, now other nodes can write on the mastro*/
-        return 1;
-    }
+        return 0;
+    
 }
 
 void signalsHandler(int signal) {
-    int trans_left=0;
-    struct msqid_ds buf;
-    /*Counting how many transactions are left in the transaction pool(aka message queue)*/
-    msgctl(msgq_id,IPC_STAT,&buf);
-    trans_left=buf.msg_qnum;
-    
-    printf("Il valore dei trans è:%ld\n",buf.msg_qnum);
-
-    updateInfos(0,trans_left,my_index,0);
+    updateInfos(0,n_trans,my_index,0);
     shmdt(shm_info);
     shmdt(shm_macro);
     shmdt(mastro_area_memoria);
@@ -304,3 +296,20 @@ void signalsHandler(int signal) {
 
 
 
+trans_pool createBlock(trans_pool p,int * sum_reward,transaction_block * block){
+    int i=0;
+    transaction* tmp;
+    
+    for(i=0;i<SO_BLOCK_SIZE-1;i++){
+        *sum_reward= *sum_reward+p->reward;
+        tmp=p->next;
+        
+        block->transactions[i]= (*p);
+        
+        transDeleteIf(p,*p);
+        
+        n_trans--;
+        p=tmp;
+    }
+    return tmp;
+}

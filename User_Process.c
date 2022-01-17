@@ -55,7 +55,7 @@ int main(int argc, char const *argv[])
 
     pid_t pid;
    
-    transaction * tr_block,*tr_pool;
+    trans_pool tr_block,tr_pool;
     msgqbuf msg_buf;/*Buffer used to send transaction*/
     
     info_process infos;/*variable used to store data of the current process locally*/
@@ -79,7 +79,7 @@ int main(int argc, char const *argv[])
     sem_id=atoi(argv[3]);/*id of semaphore*/
     mastro_id=atoi(argv[4]);/*id of mastro*/
     
-    printf("INFO:%d MACRO:%d SEM:%d MASTRO:%d\n",info_id,macro_id,sem_id,mastro_id);
+    /*printf("INFO:%d MACRO:%d SEM:%d MASTRO:%d\n",info_id,macro_id,sem_id,mastro_id);*/
     /*Attaching to shared memories*/
     shm_macro=(int*)shmat(macro_id,NULL,SHM_RDONLY);/*Attaching to shm with macros*/
     shm_info=(info_process*)shmat(info_id,NULL,0666);/*Attaching to shm with info related to processes*/
@@ -156,7 +156,7 @@ int main(int argc, char const *argv[])
         msg_buf.tr=tr;
         
         msgq_id=msgget(pid_nodes[pid].pid,0666);
-        if(msgsnd(msgq_id,&msg_buf,sizeof(msg_buf.tr),IPC_NOWAIT) == -1){
+        if(msgsnd(masterq_id,&msg_buf,sizeof(msg_buf.tr),IPC_NOWAIT) == -1){
             /*printf("[USER CHILD #%d] Errore. Transazione scartata\n",getpid());*/
             retry++;
             /* cambiamo coda */
@@ -224,6 +224,12 @@ int main(int argc, char const *argv[])
     tr->amount = tmp_budget - tr->reward;/*amount to be sent is equal to: tr.amount-(so_reward*amount)*/
 
     tr->hops = SO_HOPS;
+    
+    tr->next = NULL;
+
+    /*
+        TODO: Forse, mettere in trans_sent le trans inviate ma non ancora sul mastro
+    */
     
     return 0;
     }
