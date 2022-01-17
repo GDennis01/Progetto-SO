@@ -50,6 +50,14 @@ info_process *pid_nodes;
 
      }
  }
+ void printTransaction( transaction tr){
+    printf("[NODE CHILD #%d]Sender:%d\n",getpid(),tr.sender);
+    printf("[NODE CHILD #%d]Receiver:%d\n",getpid(),tr.receiver);
+    printf("[NODE CHILD #%d]Reward:%d\n",getpid(),tr.reward);
+    printf("[NODE CHILD #%d]TimestampSec:%ld  NSec:%ld\n",getpid(),tr.timestamp.tv_sec,tr.timestamp.tv_nsec);
+    printf("[NODE CHILD #%d]Amount:%d\n",getpid(),tr.amount);
+    printf("[NODE CHILD #%d]Hops:%d",getpid(),tr.hops);
+}
  int main(int argc, char const *argv[])
 {
 
@@ -167,6 +175,28 @@ info_process *pid_nodes;
         } 
         bytes_read=0;
 
+        if(n_trans == SO_TP_SIZE){
+            if((bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),0)) >0){
+                printf("BYTES READ PD:%d\n",bytes_read);
+                tempo = master_buf.tr.hops;
+                /*printTransaction(master_buf.tr);*/
+                if(tempo > 0){
+                    pidfriend = shm_info[N_USERS+my_friends[rand()%SO_N_FRIENDS]].pid;
+                    master_buf.mtype = pidfriend ; /*preso friend random nel modo più complesso possibile*/
+                    tempo = tempo -1;
+                    msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT);
+                
+                printf("#####RIMBALZELLO: %d, pidfreidn: %d   Sender:%d  Receiver:%d  NSec:%ld\n", tempo, pidfriend,master_buf.tr.sender,master_buf.tr.receiver,master_buf.tr.timestamp.tv_nsec);
+                }else{
+                /*mandala al father che ha hops 0 */
+
+                printf("#####PADRE RIMBALALO TU\n");
+                master_buf.mtype = getppid();
+                if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),0) == -1){}
+                }
+            }
+            
+        }
         if(blocks_written>SO_REGISTRY_SIZE-1)
             {
                   kill( getppid() , SIGUSR1 );
