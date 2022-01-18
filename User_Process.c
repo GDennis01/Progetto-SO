@@ -88,7 +88,7 @@ int main(int argc, char const *argv[])
     /*printf("[USER CHILD #%d] ID del SEM:%d\n",getpid(),sem_id);*/
 
    /*masterq*/
-    masterq_id = msgget(getppid(),IPC_CREAT | 0666);/*coda in cui mandiamo transazioni rimbalzate*/
+    masterq_id = msgget(getppid(),0666);/*coda in cui mandiamo transazioni rimbalzate*/
 
     /*Storing macros in a local variable. That way I can use macros defined in common.h*/
     for(i=0;i<N_MACRO;i++){
@@ -155,18 +155,18 @@ int main(int argc, char const *argv[])
         msg_buf.mtype=pid_nodes[pid].pid;/*That way, only the selected node can read the message with type set to its pid*/
         msg_buf.tr=tr;
         
-        msgq_id=msgget(pid_nodes[pid].pid,0666);
+        /*msgq_id=msgget(pid_nodes[pid].pid,0666);  TODO: cancellare*/
         if(msgsnd(masterq_id,&msg_buf,sizeof(msg_buf.tr),IPC_NOWAIT) == -1){
             /*printf("[USER CHILD #%d] Errore. Transazione scartata\n",getpid());*/
             retry++;
             /* cambiamo coda */
-            if(msgsnd(masterq_id,&msg_buf,sizeof(msg_buf.tr),IPC_NOWAIT) == -1){
-                
-            }
+            /* if(msgsnd(masterq_id,&msg_buf,sizeof(msg_buf.tr),IPC_NOWAIT) == -1){
+                TODO: cancellare
+            } */
         }else
             retry=0;
        
-
+        /* TODO: Trasformare sta merda in liste */
         /*Updating the local transaction list*/
         trans_sent[trans_sent_Index]= tr;/*Saving the transaction sent locally*/
         trans_sent_Index=trans_sent_Index+1;/*Incrementing by 1 the index*/

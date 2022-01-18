@@ -31,13 +31,12 @@
 int macros[N_MACRO];
 info_process *pid_users;
 info_process *pid_nodes;
- struct sembuf sops;
- int msgq_id;
- msgqbuf msg_buf, master_buf;
- int my_index=0;
- FILE * debug_blocco_nodo;
- int n_trans=0;
- int blocks_written=0;
+struct sembuf sops;
+msgqbuf msg_buf, master_buf;
+int my_index=0;
+FILE * debug_blocco_nodo;
+int n_trans=0;
+int blocks_written=0;
 
  void printblocco( transaction_block nuovoBlocco){
      int i=0;
@@ -61,7 +60,7 @@ info_process *pid_nodes;
  int main(int argc, char const *argv[])
 {
 
-    int info_id,macro_id,sem_id,mastro_id,i,j;
+    int info_id,macro_id,sem_id,mastro_id,masterq_id,i,j;
     int budget;
     int sum_reward=0;
     int bytes_read;
@@ -108,13 +107,8 @@ info_process *pid_nodes;
     /*Pool size is equal to the number of transaction maximum allowed(SO_TP_SIZE) times the size of a single transaction*/
     pool=malloc(SO_TP_SIZE*sizeof(*pool));
     
-    msgq_id=msgget(getpid(),IPC_CREAT | 0666);
-    /*16384 is the max default size of message queue*/
+    masterq_id=msgget(getppid(), 0666);
     
-
-
-
-
     /*Fine ricezione amici*/
     /*printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);*/
     /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
@@ -124,16 +118,13 @@ info_process *pid_nodes;
     semop(sem_id,&sops,1);
 
     for(i=0;i<SO_N_FRIENDS;i++){
-        msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
+        msgrcv(masterq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
         my_friends[i]=msg_buf.tr.receiver;
         /*printf("Son nodo %d e questo è il mio %d° amico:%d\n",getpid(),i,shm_info[N_USERS+my_friends[i]].pid);*/
         TEST_ERROR
     }
 
-    /*masterq*/
-    masterq_id = msgget(getppid(),IPC_CREAT | 0666);/*coda in cui mandiamo transazioni rimbalzate*/
     
-
     sops.sem_num=3;
     sops.sem_op=0;
     sops.sem_flg=0;
@@ -320,7 +311,6 @@ void signalsHandler(int signal) {
     shmdt(shm_info);
     shmdt(shm_macro);
     shmdt(mastro_area_memoria);
-    msgctl(msgq_id,IPC_RMID,NULL);
     printf("<<nodo>> %d ha pulito tutto :) \n", getpid());
     exit(EXIT_SUCCESS);
 }

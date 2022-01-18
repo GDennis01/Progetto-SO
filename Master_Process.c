@@ -213,7 +213,7 @@ int main(int argc, char const *argv[])
             /*Sending friends one by one in form of a fake transaction*/
             node_friend.mtype=shm_info[N_USERS+j].pid;
             node_friend.tr.receiver=friends[z];
-            if(msgsnd(msgget(shm_info[N_USERS+j].pid,0666),&node_friend,sizeof(node_friend.tr),0) == -1 ){
+            if(msgsnd(masterq_id,&node_friend,sizeof(node_friend.tr),0) == -1 ){
                 TEST_ERROR
             }
         }
