@@ -226,7 +226,7 @@ int blocks_written=0;
             pidfriend = shm_info[N_USERS+my_friends[rand()%SO_N_FRIENDS]].pid;
             master_buf.mtype = pidfriend ; /*preso friend random nel modo più complesso possibile*/
             tempo = tempo -1;
-            if(msgsnd(msgget(pidfriend,0666),&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){
+            if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){
                 if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){}
             }
             printf("#####RIMBALZELLO: %d, pidfreidn: %d   Sender:%d  Receiver:%d  NSec:%ld\n", tempo, pidfriend,master_buf.tr.sender,master_buf.tr.receiver,master_buf.tr.timestamp.tv_nsec);
