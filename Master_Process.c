@@ -175,10 +175,10 @@ int main(int argc, char const *argv[])
 
     /*TODO:rendere sto aborto un metodo così non si nota*/
     /*Aspetto che i nodi finiscano di creare le loro code*/
-    sops.sem_num=1;
+    /*sops.sem_num=1;
     sops.sem_op=0;
     sops.sem_flg=0;
-    semop(sem_key,&sops,1);
+    semop(sem_key,&sops,1);*/
 
     j=0;
     while(j<N_NODES){
@@ -285,7 +285,7 @@ int main(int argc, char const *argv[])
         /*controllo masterq per eventuali transazioni che hanno esaurito shops*/
         if(msgrcv(masterq_id,&node_friend,sizeof(node_friend.tr),getpid(),IPC_NOWAIT) != -1){
             /*Gotta create a new node*/
-            switch(child_pid=fork()){
+          /*switch(child_pid=fork()){
                 case 0:
                      arguments[0]="Node";
                      execve("Node",arguments,NULL);
@@ -293,7 +293,7 @@ int main(int argc, char const *argv[])
 
                 default:
                     break;
-            }
+            }*/
         }
 
     }

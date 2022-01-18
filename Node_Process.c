@@ -102,6 +102,12 @@ int blocks_written=0;
     for(i=0;i<N_MACRO;i++){
         macros[i]=shm_macro[i];
     }
+
+    sops.sem_num=3;
+    sops.sem_op=0;
+    sops.sem_flg=0;
+    semop(sem_id,&sops,1);
+
     my_friends=malloc(sizeof(int)*SO_N_FRIENDS);
     
     /*Pool size is equal to the number of transaction maximum allowed(SO_TP_SIZE) times the size of a single transaction*/
@@ -109,32 +115,12 @@ int blocks_written=0;
     
     masterq_id=msgget(getppid(), 0666);
     
-    /*Fine ricezione amici*/
-    /*printf("[NODE CHILD #%d] MY MSGQ_ID : %d\n",getpid(),msgq_id);*/
-    /*The semaphore is used so that all nodes can create their queues without generating inconsistency*/
-    sops.sem_num=1;
-    sops.sem_op=-1;
-    sops.sem_flg=0;
-    semop(sem_id,&sops,1);
-
     for(i=0;i<SO_N_FRIENDS;i++){
         msgrcv(masterq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0);
         my_friends[i]=msg_buf.tr.receiver;
         /*printf("Son nodo %d e questo è il mio %d° amico:%d\n",getpid(),i,shm_info[N_USERS+my_friends[i]].pid);*/
         TEST_ERROR
     }
-
-    
-    sops.sem_num=3;
-    sops.sem_op=0;
-    sops.sem_flg=0;
-    semop(sem_id,&sops,1);
-    /*
-    printf("[NODE CHILD #%d] SEMVAL:%d\n",getpid(),semctl(sem_id,1,GETVAL));
-    printf("[NODE CHILD #%d] ID della SHM:%d\n",getpid(),macro_id);
-    */
-    
-
     /*Populating the pid user array*/
     pid_users=malloc(sizeof(info_process)*N_USERS);
     for(i=0;i<N_USERS;i++){
@@ -159,38 +145,29 @@ int blocks_written=0;
     time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;/*[MIN_TRANS_PROC,MAX_TRANS_PROC]*/
 
     while(1){
-        while(n_trans < SO_TP_SIZE &&  ((bytes_read=msgrcv(masterq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),IPC_NOWAIT)) > 0) /*&& errno != ENOMSG*/ ){
+        while(n_trans < SO_TP_SIZE &&  ((bytes_read=msgrcv(masterq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),IPC_NOWAIT)) > 0)){
             /*If the trans pool is empty, im gonna insert the new trans in the head instead of the tail :D*/
-            pool=(n_trans == 0)  ? insertHead(pool,msg_buf.tr) : insertTail(pool,msg_buf.tr);
+            pool=(n_trans == 0)  ? insertHead(pool,msg_buf.tr) : insertTail(pool,msg_buf    .tr);
             n_trans++;
         } 
         bytes_read=0;
-
-        if(n_trans == SO_TP_SIZE){
-            if((bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),0)) >0){
-                
+        if(n_trans == SO_TP_SIZE && (bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),0)) >0){ ;
                 if(master_buf.tr.hops > 0){
                     pidfriend = shm_info[N_USERS+my_friends[rand()%SO_N_FRIENDS]].pid;
                     master_buf.mtype = pidfriend ; /*preso friend random nel modo più complesso possibile*/
                     master_buf.tr.hops = master_buf.tr.hops -1;
                     if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1)
                         fprintf(stderr,"HO FALLITO\n");
-                    if(master_buf.tr.hops <3)
-                        fprintf(stderr,"MINORE DI 3 SIUU\n");
                     printf("#####RIMBALZELLO: %d, pidfreidn: %d   Sender:%d  Receiver:%d  NSec:%ld\n", master_buf.tr.hops, pidfriend,master_buf.tr.sender,master_buf.tr.receiver,master_buf.tr.timestamp.tv_nsec);
                     printTransaction(master_buf.tr);    
                 }else{
                 /*mandala al father che ha hops 0 */
-
                 printf("#####PADRE RIMBALALO TU\n");
                 master_buf.mtype = getppid();
                 if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),0) == -1){}
-                }
-            }
-            
+                }       
         }
-        if(blocks_written>SO_REGISTRY_SIZE-1)
-            {
+        if(blocks_written>SO_REGISTRY_SIZE-1){    
                   kill( getppid() , SIGUSR1 );
                   raise(SIGTERM);
             }
@@ -208,37 +185,6 @@ int blocks_written=0;
         sum_reward=0;
         time.tv_sec=1;/*1 for debug mode*/
         time.tv_nsec=rand()%(MAX_TRANS_PROC_NSEC+1-MIN_TRANS_PROC_NSEC) +MIN_TRANS_PROC_NSEC;    
-
-    /*Reading all transaction sent to me till noone are left*/
-    
-
-
-
-    /*bytes_read=msgrcv(msgq_id,&msg_buf,sizeof(msg_buf.tr),getpid(),0); */
-
-    
-    
-    /*rimbalzo hops*/
-   /* bytes_read=msgrcv(masterq_id,&master_buf,sizeof(master_buf.tr),getpid(),IPC_NOWAIT);*/
-    if(/*bytes_read > 0*/ 0==1){
-        tempo = master_buf.tr.hops;
-        if(tempo > 0){
-            pidfriend = shm_info[N_USERS+my_friends[rand()%SO_N_FRIENDS]].pid;
-            master_buf.mtype = pidfriend ; /*preso friend random nel modo più complesso possibile*/
-            tempo = tempo -1;
-            if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){
-                if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),IPC_NOWAIT) == -1){}
-            }
-            printf("#####RIMBALZELLO: %d, pidfreidn: %d   Sender:%d  Receiver:%d  NSec:%ld\n", tempo, pidfriend,master_buf.tr.sender,master_buf.tr.receiver,master_buf.tr.timestamp.tv_nsec);
-        }else{
-            /*mandala al father che ha hops 0 */
-
-            /*printf("#####PADRE RIMBALALO TU\n");
-            master_buf.mtype = getppid();
-            if(msgsnd(masterq_id,&master_buf,sizeof(master_buf.tr),0) == -1){}*/
-        }
-    }
-
     }
 
     printf("[NODE CHILD] ABOUT TO ABORT\n");
