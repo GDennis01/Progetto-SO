@@ -19,5 +19,5 @@ int trans_sent_Index=0; /*max index of the transaction list*/
 
 void printTransaction( transaction tr);
 int getRndNode();
-int checkLedger(transaction tr);
+int checkLedger();
 int getBudget(int my_index);

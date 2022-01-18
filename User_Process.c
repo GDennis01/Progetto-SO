@@ -123,7 +123,7 @@ int main(int argc, char const *argv[])
 
     
     while(1){
-    
+        TEST_ERROR
         time.tv_nsec=rand()%(MAX_TRANS_GEN_NSEC+1-MIN_TRANS_GEN_NSEC) +MIN_TRANS_GEN_NSEC;/*[MIN_TRANS_GEN,MAX_TRANS_GEN]*/
         time.tv_sec=1;/*1 for easier debug*/
         
@@ -149,12 +149,13 @@ int main(int argc, char const *argv[])
        
         /* TODO: Trasformare sta merda in liste */
         /*Updating the local transaction list*/
-        trans_sent[trans_sent_Index]= tr;/*Saving the transaction sent locally*/
+      /* trans_sent[trans_sent_Index]= tr;/*Saving the transaction sent locally*/
+        trans_sent=trans_sent_Index == 0 ? insertHead(trans_sent,tr) : insertTail(trans_sent,tr);
         trans_sent_Index=trans_sent_Index+1;/*Incrementing by 1 the index*/
         trans_sent=realloc(trans_sent,sizeof(transaction)*(trans_sent_Index+1));/*Incrementing by 1 unit(transaction) the size of the list*/
         
         /*printf("[USER CHILD #%d] Trans con amount %d inviata al nodo %d\n",getpid(),tr.amount,pid);*/
-        checkLedger(*trans_sent);
+        checkLedger();
         fprintf(fd,"\n[USER #%d] Transazione %d°:\n\tSender:%d\n\tReceiver:%d\n\tTimestamp Sec:%ld  NSec:%ld\n\tReward:%d\n\tAmount:%d Hops:%d\n",getpid(),trans_sent_Index,tr.sender,tr.receiver,tr.timestamp.tv_sec,tr.timestamp.tv_nsec,tr.reward,tr.amount,tr.hops);
 
         /*printf("[USER CHILD #%d] Invio a USER #%d di %d\n",getpid(),tr.receiver,tr.amount);*/
@@ -207,11 +208,6 @@ int main(int argc, char const *argv[])
     tr->hops = SO_HOPS;
     
     tr->next = NULL;
-
-    /*
-        TODO: Forse, mettere in trans_sent le trans inviate ma non ancora sul mastro
-    */
-    
     return 0;
     }
 }
@@ -227,7 +223,7 @@ int getRndNode(){
 }
 
 
-int checkLedger(transaction tr){
+int checkLedger(){
     /*Method that checks the whole ledger and match if the transaction sent by the user is written in it.
     It update the balance accordingly to the ledger
     Cosa deve fare esattamente:
@@ -254,6 +250,10 @@ int checkLedger(transaction tr){
     sops.sem_op=-1;
     sops.sem_flg=0;
     semop(sem_id,&sops,1);
+
+    
+    /*I cycle through every transaction of every blocks in the ledger and update the budget accordingly*/
+    
     for(i=0;i<SO_REGISTRY_SIZE;i++){
         if(mastro_area_memoria[i].executed == 1){
             for(j=0;j<SO_BLOCK_SIZE;j++){
@@ -266,19 +266,21 @@ int checkLedger(transaction tr){
         }
     }
    
+   /*For each transaction that has been sent, I cycle through the whole ledger to see if it is in it*/
     for(z=0;z<trans_sent_Index;z++){
-        /*printTransaction(trans_sent[z]);*/
          for(i=0;i<SO_REGISTRY_SIZE && found == 0;i++){
              if(mastro_area_memoria[i].executed == 1){
             for(j=0;j<SO_BLOCK_SIZE && found ==0;j++){
                 curr_tr = mastro_area_memoria[i].transactions[j]; 
                 if(curr_tr.sender == trans_sent[z].sender && curr_tr.timestamp.tv_nsec == trans_sent[z].timestamp.tv_nsec && curr_tr.timestamp.tv_sec == trans_sent[z].timestamp.tv_sec && curr_tr.receiver == trans_sent[z].receiver){
-                    /*printf("devo rimuovere la transazione\n");*/
+                    trans_sent=transDeleteIf(trans_sent,trans_sent[z]);
+                    trans_sent_Index--;
                     found=1;
                 }
             }
             }
         }
+        /*If a transaction has been sent but it's not in the ledger, I update the budget accordingly*/
         if(found == 0){
             budget=budget - trans_sent[z].amount - trans_sent[z].reward;
         }else{
