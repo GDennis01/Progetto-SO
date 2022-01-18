@@ -14,11 +14,10 @@
 #include "common.c"
 
 
-transaction* trans_sent;/*list containing all transaction sent but not yet written in the ledger*/
+trans_pool trans_sent;/*list containing all transaction sent but not yet written in the ledger*/
 int trans_sent_Index=0; /*max index of the transaction list*/
 
 void printTransaction( transaction tr);
 int getRndNode();
 int checkLedger(transaction tr);
 int getBudget(int my_index);
-transaction* removeTrans(transaction tr);

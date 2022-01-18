@@ -114,20 +114,6 @@ int main(int argc, char const *argv[])
         /*printf("[USER CHILD #%d] Leggo Nodo #%d \n",getpid(),pid_nodes[i].pid);  */
     }
 
-    /*Incrementing by 1 the value of the fourth sem. When the user terminate, the flag undo
-    makes so that the increment rollbacks to the previous state*/
-    /*sops.sem_num=3;
-    sops.sem_op=1;
-    sops.sem_flg=SEM_UNDO;
-    semop(sem_id,&sops,1);*/
-
-
-     /*The semaphore is used to wait for nodes to finish creating their queues*/
-   /* sops.sem_num=1;
-    sops.sem_op=0;
-    sops.sem_flg=0;
-    semop(sem_id,&sops,1);*/
-
     sops.sem_num=3;
     sops.sem_op=0;
     sops.sem_flg=0;
@@ -155,14 +141,9 @@ int main(int argc, char const *argv[])
         msg_buf.mtype=pid_nodes[pid].pid;/*That way, only the selected node can read the message with type set to its pid*/
         msg_buf.tr=tr;
         
-        /*msgq_id=msgget(pid_nodes[pid].pid,0666);  TODO: cancellare*/
         if(msgsnd(masterq_id,&msg_buf,sizeof(msg_buf.tr),IPC_NOWAIT) == -1){
             /*printf("[USER CHILD #%d] Errore. Transazione scartata\n",getpid());*/
             retry++;
-            /* cambiamo coda */
-            /* if(msgsnd(masterq_id,&msg_buf,sizeof(msg_buf.tr),IPC_NOWAIT) == -1){
-                TODO: cancellare
-            } */
         }else
             retry=0;
        
@@ -315,28 +296,7 @@ int checkLedger(transaction tr){
 
     return 0;
 }
-/*Method copied from stack overflow xd*/
-transaction * removeTrans(transaction  tr){
-    int i=0,j=0;
-    transaction* tmp;
-    /*Finding the index of the transaction to remove and exiting the loop when found*/
-    for(i=0;i<trans_sent_Index;i++){
-        if(trans_sent[i].sender == tr.sender && trans_sent[i].timestamp.tv_nsec == tr.timestamp.tv_nsec && trans_sent[i].timestamp.tv_sec == tr.timestamp.tv_sec ){
-            break;
-        }
-    }
-    /*Storing all the transaction ,UP TO the transaction to remove, in temp*/
-    tmp=malloc(sizeof(transaction)*(trans_sent_Index+1));/*Temp variable equal to trans_sent*/
-    if(i!=0)
-        memcpy(tmp,trans_sent,sizeof(transaction)*i);
-    /*Copying the other transactions excluding the one to delete*/
-    if(i!=(sizeof(transaction)*(i-1)))
-        memcpy(tmp+(i*sizeof(transaction)),trans_sent+((i+1)*sizeof(transaction)),trans_sent_Index+1-i);
-    free(trans_sent);
 
-    trans_sent_Index=trans_sent_Index-1;
-    return tmp;
-}
 
 void signalsHandler(int signal) {
     switch(signal){
