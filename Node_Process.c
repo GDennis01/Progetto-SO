@@ -103,7 +103,7 @@ int blocks_written=0;
         macros[i]=shm_macro[i];
     }
 
-    sops.sem_num=3;
+    sops.sem_num=1;
     sops.sem_op=0;
     sops.sem_flg=0;
     semop(sem_id,&sops,1);

@@ -60,9 +60,9 @@ void check_err_keys(int info_key,int macro_key,int sem_key,int mastro_key){
 /*Method that initialize the 4 semaphores*/
 void initSem(int sem_id,int n_users,int n_nodes){
     semctl(sem_id,0,SETVAL,n_users+n_nodes);/*Semaphore used to synchronize writer(master) and readers(nodes/users)*/
-    semctl(sem_id,1,SETVAL,n_nodes);/*Semaphore used to allow nodes to finish creating their queues*/
+    semctl(sem_id,1,SETVAL,1);/*Semaphore used to allow nodes to finish creating their queues*/
     semctl(sem_id,2,SETVAL,1);/*Semaphore used to synchronize nodes writing on mastro*/
-    semctl(sem_id,3,SETVAL,1);/*Semaphore used by master to wait for nodes to finish creating their queues*/
+    /*semctl(sem_id,3,SETVAL,1);/*Semaphore used by master to wait for nodes to finish creating their queues*/
 }
 
 int getBudget(int my_index){

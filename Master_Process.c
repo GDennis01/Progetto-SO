@@ -220,7 +220,7 @@ int main(int argc, char const *argv[])
         j++;
     }
     /*Rilascio il semaforo così i nodi/user possono chillare*/
-    sops.sem_num=3;
+    sops.sem_num=1;
     sops.sem_op=-1;
     sops.sem_flg=0;
     semop(sem_key,&sops,1);
